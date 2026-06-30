@@ -59,7 +59,7 @@ Get-Datastore vsanDatastore-RTO | %{ '{0:P0} used' -f (1-$_.FreeSpaceGB/$_.Capac
 ```powershell
 Restart-VM 'vcf-m02-esxXX-91' -Confirm:$false   # 硬 reset
 ```
-等它 ping → 443 → inner Connected。host 回來後別忘了 CSI globalmount 可能死掛載（篇章 05 §4b）。
+等它 ping → 443 → inner Connected。host 回來後別忘了 CSI globalmount 可能死掛載（篇章 06 §2b）。
 
 > ⚠️ **不要對跑 k8s 的 nested host 做 live vMotion**（churn 會再 PSOD）。要搬用 **cold-migrate**。落在 local datastore 的（如 esx01-521、vcf-installer-91）無法 compute-vMotion。
 
@@ -67,7 +67,7 @@ Restart-VM 'vcf-m02-esxXX-91' -Confirm:$false   # 硬 reset
 
 ## 4. DRS：防無人看管時自動 vMotion 觸發連鎖災難
 
-外層 DRS `fullyAutomated` 會自動 live-vMotion nested ESXi → 觸發 swsec stale（篇章 02）或直接 PSOD（篇章 05 nested ESXi 不要隨便 vMotion）。
+外層 DRS `fullyAutomated` 會自動 live-vMotion nested ESXi → 觸發 swsec stale（篇章 02）或直接 PSOD（見本篇 §3：nested ESXi 不要隨便 live-vMotion）。
 
 **標準配置**：
 - 外層 cluster DRS → **Manual**（待機防自動 vMotion）；要重建 VKS 時才臨時開 FullyAutomated。

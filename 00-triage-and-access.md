@@ -20,20 +20,22 @@ vCenter / SDDC / VCFA 連不上 或 bringup 卡住
 │     └─ vSAN「每台 Member Count=1」→ unicast peer list 空 → 篇章 03 §A
 │
 ├─ C. vCenter API 起來但一票服務 STOPPED、host reconnect / wcp / license 卡？
-│     └─ service-control --start --all → 篇章 05 §vCenter 服務補齊
+│     └─ service-control --start --all → 篇章 05 §8（連鎖恢復鏈）
 │
-├─ D. supervisor / VSP K8s API（VIP :6443）不通？
-│     └─ kube-vip/scheduler/controller-manager crashloop → etcd fsync 太慢 → 篇章 05 §leader-election
+├─ D. VSP supervisor K8s API（VIP :6443）不通？
+│     └─ kube-vip/scheduler/controller-manager crashloop → etcd fsync 太慢 → 篇章 05 §3 leader-election
+│     └─ bootstrap 卡 / supervisor 啟用報錯（dcli / wcp cache / 外部 VIP / CLS）→ 篇章 05 §6–§7
 │
-├─ E. VCFA gateway 404/503、pod CrashLoop / FailedMount？
-│     └─ 先量 K8s node `uptime` load → ≫24 = 底層 overload，別硬戳 pod → 篇章 06 + 05 §VCFA
-│     └─ FailedMount globalmount input/output error → CSI 死掛載 → 篇章 05 §VCFA
+├─ E. VCFA gateway 404/503、pod CrashLoop / FailedMount、region quota 失敗？
+│     └─ 先量 K8s node `uptime` load → ≫24 = 底層 overload，別硬戳 pod → 篇章 07 + 06
+│     └─ FailedMount globalmount input/output error → CSI 死掛載 → 篇章 06 §2b
+│     └─ .77 / provider 不通 → appliance NIC 斷線救活 → 篇章 06 §1
 │
 └─ F. bringup 任務失敗（不是卡住）？
       └─ 看失敗的 task 名稱 → 篇章 04 對症（fleetFqdn / VSP bundle / timeout）
 ```
 
-**通則：症狀在 K8s/應用層，根因九成在儲存或 CPU（篇章 06）。** 先量底層健康度再修上層。
+**通則：症狀在 K8s/應用層，根因九成在儲存或 CPU（篇章 07）。** 先量底層健康度再修上層。
 
 ---
 

@@ -29,11 +29,13 @@
 | vCenter/SDDC 突然連不上、VM 自動關機+inaccessible、disk `In CMMDS: false` | [03-vsan.md](03-vsan.md) §B（CMMDS dropout） |
 | bringup 卡 `Save VCF Management Components` / `FAILED_TO_SAVE_OR_UPDATE_VCF_MGMT_COMPONENTS` | [04-bringup-failures.md](04-bringup-failures.md) §fleetFqdn |
 | bringup 卡 VSP bootstrap `StringIndexOutOfBoundsException` / `PUBLIC_VSP_CLUSTER_BOOTSTRAP_FAILED` | [04-bringup-failures.md](04-bringup-failures.md) §VSP bundle |
-| bringup 一直 timeout、OVA import 被取消、`RequestCanceled` | [04-bringup-failures.md](04-bringup-failures.md) §timeout + [05](05-supervisor-and-vcfa.md) §etcd |
-| Supervisor/VSP API（`.19:6443`）不通、kube-vip/scheduler/controller-manager crashloop | [05-supervisor-and-vcfa.md](05-supervisor-and-vcfa.md) §leader-election |
-| VCFA gateway 全 404/503、pod 卡 `CreateContainerError`/`ContainerCreating`/`FailedMount globalmount` | [05-supervisor-and-vcfa.md](05-supervisor-and-vcfa.md) §VCFA |
-| vCenter 服務一票 STOPPED、host reconnect 報 license 失敗、SPS 卡 START_PENDING | [05-supervisor-and-vcfa.md](05-supervisor-and-vcfa.md) §vCenter 服務補齊 |
-| nested ESXi PSOD、外層 CPU 超賣、outer vSAN 撐爆、host `NotResponding` | [06-outer-resources.md](06-outer-resources.md) |
+| bringup 一直 timeout、OVA import 被取消、`RequestCanceled` | [04-bringup-failures.md](04-bringup-failures.md) §timeout + [05](05-vsp-supervisor.md) §etcd |
+| **VSP** Supervisor API（VIP `:6443`）不通、kube-vip/scheduler/controller-manager crashloop | [05-vsp-supervisor.md](05-vsp-supervisor.md) §leader-election |
+| **VSP** bootstrap 卡住、supervisor 啟用報錯（dcli / wcp cache / 外部 VIP 不通 / CLS） | [05-vsp-supervisor.md](05-vsp-supervisor.md) §6–§7 |
+| vCenter 服務一票 STOPPED、host reconnect 報 license 失敗、SPS 卡 START_PENDING | [05-vsp-supervisor.md](05-vsp-supervisor.md) §8（連鎖恢復鏈）|
+| **VCFA** `.77`/`/provider/home` 不通、災後 appliance 救活 | [06-vcfa.md](06-vcfa.md) §1 |
+| **VCFA** gateway 404/503、pod `FailedMount globalmount` / CrashLoop、region quota 失敗 | [06-vcfa.md](06-vcfa.md) §2–§3 |
+| nested ESXi PSOD、外層 CPU 超賣、outer vSAN 撐爆、host `NotResponding` | [07-outer-resources.md](07-outer-resources.md) |
 | 只想找指令 | [reference/commands.md](reference/commands.md) |
 
 ---
@@ -45,8 +47,9 @@
 2. [network-l2-swsec](02-network-l2-swsec.md) — 外層 dvSwitch swsec stale、vmk0 MAC 規則、network rollback、gateway
 3. [vsan](03-vsan.md) — vSAN partition（unicast peer）與 CMMDS dropout（disk 沒收進 CMMDS）全鏈復原
 4. [bringup-failures](04-bringup-failures.md) — fleetFqdn、VSP bundle、timeout tuning、lab-mode skip、retry/resume
-5. [supervisor-and-vcfa](05-supervisor-and-vcfa.md) — VSP supervisor / VCFA / vCenter 服務的恢復鏈
-6. [outer-resources](06-outer-resources.md) — 外層 CPU 超賣、vSAN 容量、PSOD、DRS
+5. [vsp-supervisor](05-vsp-supervisor.md) — VSP supervisor：兩種 supervisor 之分、動態找節點 IP、leader-election/etcd、bootstrap VM(CAPV)、supervisor 啟用雷、斷線連鎖恢復鏈
+6. [vcfa](06-vcfa.md) — VCFA 應用層：appliance 本質與端點、災後救活、gateway 404/CSI/SPS、region quota 過載、provider 啟用
+7. [outer-resources](07-outer-resources.md) — 外層 CPU 超賣、vSAN 容量、PSOD、DRS
 - [reference/commands](reference/commands.md) — esxcli / PowerCLI / REST 速查
 
 ---

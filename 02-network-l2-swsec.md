@@ -76,7 +76,7 @@ $asMgr.UpdateOptions(@($opt))
 
 某些外層 host 上 swsec stale 沒清過 → vmk migration / VSP 在那台 L2 不通。用 cluster DRS rule `MustRunOn` 把 4 台 nested 釘在已驗證 OK 的一台外層 host，避免 DRS 把它們散到沒 toggle 過 swsec 的 host。
 
-> ⚠️ wipe 重建後 **DRS VM group 的成員會清空**（rule 和 host group 還在），要重新填回（見篇章 06 §DRS）。
+> ⚠️ wipe 重建後 **DRS VM group 的成員會清空**（rule 和 host group 還在），要重新填回（見篇章 07 §DRS）。
 
 ---
 
