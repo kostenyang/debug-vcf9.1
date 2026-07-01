@@ -137,3 +137,8 @@ DTGW 環境 Quick Start 灰掉不可用 → 走 Manual Setup。Provider portal `
 ---
 
 來源：rtolab `layer3-postbringup/vcf-operations-automation-deploy-troubleshooting.md`、`k8s-access-and-checks.md`、`docs/recovery-2026-06-vsan-cmmds-to-vks-rebuild.md`、`docs/debug-vcfa-nested-cheatsheet.md`、memory `project_vsp_outage_recovery`（2026-05 ~ 06 vcf-m02 實證）。
+
+---
+
+## 完整實戰:VCFA platform 死亡螺旋復原鏈(vcf-m02, 2026-07-01)
+建 org 卡死 + portal 500 + pod 全 CrashLoop + node flapping 的完整四步復原(清 CSI 死掛載→全刪 kafka pod 重建 KRaft→leader-election patch→24vCPU+DRS 獨佔 host),含最底層 etcd fsync 68ms 根因與「恢復後別再 restart pod」教訓:見 rtolab repo `debug/vcfa-death-spiral-recovery.md`。
