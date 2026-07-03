@@ -142,3 +142,63 @@ DTGW 環境 Quick Start 灰掉不可用 → 走 Manual Setup。Provider portal `
 
 ## 完整實戰:VCFA platform 死亡螺旋復原鏈(vcf-m02, 2026-07-01)
 建 org 卡死 + portal 500 + pod 全 CrashLoop + node flapping 的完整四步復原(清 CSI 死掛載→全刪 kafka pod 重建 KRaft→leader-election patch→24vCPU+DRS 獨佔 host),含最底層 etcd fsync 68ms 根因與「恢復後別再 restart pod」教訓:見 rtolab repo `debug/vcfa-death-spiral-recovery.md`。
+
+---
+
+## 6. 前門 serving 但外部「連不上」——envoy 拿不到 xDS config / 用 IP 測誤判(2026-07-03)
+
+storm 後常見:後端 app 全 Running,但外部打 gateway VIP 全 timeout/404。**兩個假象疊加,別誤判「掛了」:**
+
+1. **envoy proxy 卡「拿不到 xDS config」**:`crictl logs <envoy>` 見 `initial fetch timed out for ...ClusterLoadAssignment` → 無 listener → 前門不 serving。envoy 累計上百次重啟(213×)但其實 Running。**修:重啟 `-n vmsp-platform` 的 vcfa-gateway-configuration pod**,fresh envoy(attempt 0)重抓 config 即恢復(envoy 無狀態,重啟不觸發 reconcile 風暴,風險低)。
+2. **⚠️ 驗證前門一定用 FQDN,不能用 IP**:envoy 靠 `:authority`(Host header = FQDN)路由。**用 IP 打 → Host=IP 對不上任何 httproute → 回 404 或 timeout(看似掛,其實好的)**。2026-07-03 一度用 `.77/.43/.86` IP 全 404,誤判「未 serving」花大把時間;換 FQDN 一測就通。
+   ```powershell
+   $fqdn='kosten-vcf91-auto.rtolab.local'  # = .77;別用 IP
+   $b64=[Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes('admin@system:<pw>'))
+   Invoke-WebRequest "https://$fqdn/cloudapi/1.0.0/sessions/provider" -Method Post -SkipCertificateCheck `
+     -Headers @{Authorization="Basic $b64"; Accept='application/json;version=40.0'}  # 200+token=活
+   ```
+   - **Accept 格式雷**:必須 `application/json;version=40.0`。用 `application/*+json` 回 **406**。
+
+## 7. platform 慢/不穩的**定量根因**:I/O-bound,不是 CPU(2026-07-03 逐層量到底)
+
+load 飆數百時先分診 CPU-bound vs I/O-bound,結論完全不同。**vcf-m02 實測全部指向 I/O-bound + 慢儲存地板:**
+
+| 量測 | 數值 | 判讀 |
+|---|---|---|
+| platform VM CPU 用量 | 2.7 GHz / 48 可用 | **CPU 閒置** |
+| platform VM CPU ready | 0.6% | 沒被外層餓 |
+| platform VM 內部 load | 229 | ← 幾乎全 I/O-wait(D 狀態等磁碟) |
+| **etcd wal_fsync** | **57.5 ms**(backend_commit 77.7ms) | 慢儲存地板,健康<10,慢 5.7x |
+| **外層** vSAN(nested ESXi VM 磁碟) | **1-2 ms** | **快!瓶頸不在外層磁碟** |
+| nested ESXi VM CPU ready/co-stop | 0.3-0.8% / 0-1.1% | **沒被外層 CPU 餓** |
+
+**定論:那 55ms 是純粹「double-nested vSAN 軟體層對同步 fsync 的固有延遲」**(etcd 每筆 durable write 串過兩層軟體 vSAN 才 ack)。→ **不是資源爭用,QoS I/O share/reservation 無從施力**(vSAN 也沒有 IOPS reservation,只有 limit);外層磁碟已 1-2ms、nested 沒被餓。**唯一能壓小的是「降 I/O 量」**(見下)。量法:
+```bash
+# etcd fsync(平台 SSH)
+sudo curl -s --cacert/cert/key /etc/kubernetes/pki/etcd/* https://127.0.0.1:2379/metrics \
+  | grep -E 'wal_fsync_duration_seconds_(sum|count)'   # sum/count=平均秒
+# 外層 vs 內層延遲對比 → 外層 vC 172.16.10.100(admin@vmwaresso.taiwan / 381VMware1!admin)
+#   Get-Stat <nested-esx-VM> virtualDisk.totalWriteLatency  → 1-2ms = 外層不是瓶頸
+```
+
+### 7a. ⭐ 降 I/O 量最有料的單點:fluent-bit memory limit 竟是 **100Mi**
+`dmesg | grep 'Killed process.*fluent'` 見 fluent-bit / flb-pipeline **一直 cgroup OOM**(17 次/短時間)→ 重啟 → 又 OOM → 對慢儲存狂 I/O。根因:**fluentbitagent CR 的 memory limit 只有 `100Mi`**(對 log aggregation 荒謬地小)。改它(**改 CR 不是 daemonset,否則 logging-operator 會 reconcile 還原**):
+```bash
+K="echo <pw>|sudo -S kubectl --kubeconfig=/etc/kubernetes/admin.conf"
+$K get fluentbitagent -A    # logging-operator / -filelogs / -systemlogs 三個
+for fb in logging-operator logging-operator-filelogs logging-operator-systemlogs; do
+  $K patch fluentbitagent $fb --type=merge -p '{"spec":{"resources":{"limits":{"memory":"1Gi"},"requests":{"memory":"256Mi"}}}}'
+done
+```
+> 其他 churn 源(重啟榜):seaweedfs、kafka、cluster-info-dump/support-bundle cronjob(**每 15分/每時 fire,先 suspend**:`kubectl -n vmsp-platform patch cronjob support-bundle-* -p '{"spec":{"suspend":true}}'`)、kyverno。
+> ⚠️ **診斷本身也會加 load**:`crictl ps -a` 全掃排序、UI 載大列表都會把 load 從 60 打到 380。用輕量 name-grep,別在 spike 中連續打 API。恢復後靜置。
+
+## 8. DTGW 租戶網路 onboarding + rights 絕對鎖(2026-07-03,VCF9.1 Manual Setup)
+
+VCFA 租戶要能設 **Gateway Firewall / VPC**,provider 端要把 DTGW onboard 進 VCFA(不是只在 NSX 建)。**REST API 幾乎全藏,靠 Provider UI:**
+- Edge/VNA Clusters → **SYNC**(把 NSX 的 VNA 同步進 VCFA 當 edge cluster;`/cloudapi/v1/edgeClusters` 一開始是 0)。
+- Org → Networking → **Set Up Networking 精靈**(選 Distributed VLAN Connection + VNA)→ 建 `regionalNetworkingSetting`。**realization 很吃資源,慢儲存下常崩平台→ `REALIZATION_FAILED`**;穩定窗口 **PUT 整個 RNS 物件回去重推**即 `REALIZED`(idempotent resume)。
+- 之後 org Networking **SYNC**「Sync Regional Networking Resources into Tenant Manager」。
+- 租戶 UI 走的是 **CCI**(`/cci/kubernetes/apis/topology.cci.vmware.com/v1alpha2/regions` 等 k8s 式 API),**不是 `/cloudapi`**。Gateway Firewall 頁「Unauthorized」= 租戶缺 rights;變成 **500** = auth 過了、後端(CCI/supervisor)重載。
+
+**🔒 rights 絕對鎖(窮盡驗證)**:租戶 org 的 Organization Administrator role 可能是**空的(0 rights)**。但 **admin@system 改 rightsBundle/globalRole/role 全 403**(`RIGHTS_BUNDLE_EDIT`/`GLOBAL_ROLE_EDIT`/`ROLE_EDIT`);**連平台服務帳號 `vcfa-service-manager-admin`(k8s secret `prelude/vcfa-service-manager-admin-secret` 的 refreshToken → `POST /oauth/provider/token` 換 access token,可換到)拿去改也 403**。→ 這些是 service-managed **絕對唯讀**。**授租戶 networking rights 只能靠「Set Up Networking 精靈一次成功」的內部機制**(非公開 API),失敗→PUT 重推會跳過此授權 side-effect。⚠️ 勿把萃取的 token 寫進會 commit 的檔案。詳 rtolab `debug/_resume-vcfa-tenant.md`。
