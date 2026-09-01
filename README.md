@@ -36,6 +36,9 @@
 | **VCFA** `.77`/`/provider/home` 不通、災後 appliance 救活 | [06-vcfa.md](06-vcfa.md) §1 |
 | **VCFA** gateway 404/503、pod `FailedMount globalmount` / CrashLoop、region quota 失敗 | [06-vcfa.md](06-vcfa.md) §2–§3 |
 | nested ESXi PSOD、外層 CPU 超賣、outer vSAN 撐爆、host `NotResponding` | [07-outer-resources.md](07-outer-resources.md) |
+| **VCF Operations 壞了/被刪，想拆掉重裝**；UI 找不到 remove/redeploy；同名同 IP 重裝 fleet 不認 | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §1–§3 |
+| 要**重建整個管理層**但保留既有 vCenter/NSX（installer converge）；精靈卡 `IP Pool should be at least 12` / `DRS fully automated` / `certificate chain` | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §4 |
+| **VSP supervisor VM 關掉後自己又開回來** | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §5 |
 | 只想找指令 | [reference/commands.md](reference/commands.md) |
 
 ---
@@ -50,6 +53,7 @@
 5. [vsp-supervisor](05-vsp-supervisor.md) — VSP supervisor：兩種 supervisor 之分、動態找節點 IP、leader-election/etcd、bootstrap VM(CAPV)、supervisor 啟用雷、斷線連鎖恢復鏈
 6. [vcfa](06-vcfa.md) — VCFA 應用層：appliance 本質與端點、災後救活、gateway 404/CSI/SPS、region quota 過載、provider 啟用
 7. [outer-resources](07-outer-resources.md) — 外層 CPU 超賣、vSAN 容量、PSOD、DRS
+8. [ops-loss-and-mgmt-rebuild](08-ops-loss-and-mgmt-rebuild.md) — VCF Operations 救不回時的五條路、installer converge 重建管理層全流程與踩雷、VSP 節點互相救援
 - [reference/commands](reference/commands.md) — esxcli / PowerCLI / REST 速查
 
 ---
