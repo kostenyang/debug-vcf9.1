@@ -23,6 +23,9 @@
 | 驗證失敗 `Cluster does not have DRS fully automated` | [§4.6 DRS 必須 Fully Automated](#46-唯一真正的驗證失敗drs-要-fully-automated) |
 | **VSP supervisor VM 關掉後「自己又開回來」** | [§5 互相救援不是有鬼](#5-vsp-supervisor-vm-自己開回來的真相) |
 | **park 的舊 VM 被自動刪掉了** | [§4.9 沒有回頭路](#49-️按下-deploy-就沒有回頭路舊-vsp--vcfa-平台-vm-會被自動刪除) |
+| **converge 卡在 Deploy and configure VCF Automation**（UI 顯示 In progress 但不動） | [§8 fleet depot 重試風暴](#8-converge-卡在deploy-and-configure-vcf-automationfleet-depot-重試風暴) |
+| 想判斷某步驟是「還在跑」還是「卡死」 | [§8.3 看有沒有真的在搬東西](#83-判斷還在跑-vs-卡死看有沒有真的在搬東西) |
+| VSP 節點上 `kubectl` 一直連 `localhost:8080` 失敗 | [§8.6 admin.conf 是 0 bytes](#86-診斷用的節點存取備忘) |
 | 部署後登不進新元件（不知道密碼） | [§4.7 自動產生的密碼](#47-自動產生的密碼一定要匯出) |
 
 ---
@@ -281,6 +284,114 @@ Get-VM -Name '*vspp*' | Select Name, PowerState    # 確認全部 PoweredOff
 
 **授權鏈影響測不出來**：該環境全程是 **Evaluation Mode**，沒有真授權，
 所以「Ops 消失會不會導致 vCenter / ESXi 掉授權」**無法量測**。要回答這題必須在有真實授權的環境重驗。
+
+---
+
+## 8. converge 卡在「Deploy and configure VCF Automation」（fleet depot 重試風暴）
+
+**症狀**：里程碑 1–5 全綠，第 6 個 `Deploy and configure VCF Automation` 停在 2/8，
+UI 狀態欄一直是 **In progress**（看起來只是慢），實際上**卡死不會自己好**。
+
+### 8.1 先把那一列展開 —— 錯誤訊息藏在裡面
+
+Clarity 表格的狀態欄會停在 `In progress` / `Loading`，真正的訊息在**展開列**：
+
+```
+Failed to configure LCM components    Reference Token: ALUJBV
+```
+
+### 8.2 用 Reference Token 反查 installer 日誌
+
+```bash
+# installer 的 SSH 帳號是 vcf（不是 root）；密碼＝lab.yaml 的 vcf_installer.root_pw
+ssh vcf@192.168.114.5
+grep -A45 'ALUJBV' /var/log/vmware/vcf/domainmanager/domainmanager.log
+```
+
+拿到的因果鏈：
+
+```
+PUBLIC_LCM_COMPONENTS_CONFIGURE_FAILED  Failed to configure LCM components
+  at InstallVspComponentFleetLcmAction.execute
+Caused by: Could not complete Fleet LCM task with ID: 01a05f25-…
+Caused by: Retriable operation 'Waiting for Fleet LCM task …' failed after 360 retries
+Caused by: Task is pending or in progress
+```
+
+→ installer 等 Fleet LCM 任務等到 **360 次輪詢上限**，失敗後 UNDO 再重試；任務狀態恆為 `RUNNING`。
+
+### 8.3 判斷「還在跑 vs 卡死」：看有沒有真的在搬東西
+
+VCFA 安裝要把 **15 GB bundle** 從 installer 拉到 VCF services runtime。三個客觀指標：
+
+```bash
+# 在 runtime 節點（vspp2-r2）上
+ss -tn | grep '<installer-ip>:443'                 # 有沒有連線 → 0 就是沒在傳
+crictl images | wc -l                              # 隔 90 秒再看一次，有沒有成長
+df -m /                                            # 同上
+crictl ps -a | head                                # 有沒有 VCFA 相關容器
+```
+
+本次實測：**連線 0、images 固定 87 個、磁碟 90 秒只長 11 MB、沒有任何 VCFA 命名空間**
+（只有 `vmsp-platform` / `vmsp-policies`）→ 確定沒開始傳，不是慢。
+
+而 bundle 本身是好的：
+
+```bash
+# installer 上
+du -sh /nfs/vmware/vcf/nfs-mount/bundle/<bundle-id>/     # 15G，早就備好
+```
+
+### 8.4 真正的卡點：fleet-build-service 的 depot 設定重試風暴
+
+VSP（`vspp-r2`）四個節點分工：
+
+| 節點 | 關鍵容器 |
+|---|---|
+| 持有 VIP 的那台 | `fleetbuild`（**vcf-fleet-build-service**）、`salt-minion`、`sddcupgrade`、`zot-1` |
+| 另一台 | `fleetupgrade`（**fleet-upgrade-service**, :9123）、`download-service`、`file-server`、`raas`、`salt-master` |
+| 第三台 | `distribution-service`、`sddcbuild`、`telemetry-acceptor`、`vidb-service` |
+
+`fleet-upgrade-service` 只是把任務查詢**轉送**給 `vcf-fleet-build-service-fleetbuild:9133`。
+真正的問題在 `fleetbuild` 的日誌 —— **每約 10 秒重複一輪**：
+
+```
+Propagating FDS kosten-vcf91-fleet-r2 → SDDC LCM 90bc7726-…
+Assigning Fleet Depot: kosten-vcf91-fleet-r2 to SDDC LCM …
+Creating fleet depot config update task … / Successfully created … task 01a060cb-…
+Waiting for SDDC LCM task 01a060cb-… to complete (timeout: 5min, interval: 1s)
+```
+
+→ **fleet depot 設定推不進 SDDC LCM**，VCFA 安裝因此永遠開始不了。
+
+佐證：
+
+```bash
+# 新 SDDC Manager 上，全部 bundle 都沒下載
+GET /v1/bundles          # 本次 232 個全是 downloadStatus=PENDING
+GET /v1/services-config  # VCF_DEPOT 指向新建 fleet 的內建 depot（/depot-service/content-gateway）
+                         # 注意 9.1 已移除 GET /v1/system/settings/depot（回 410 API_NO_LONGER_SUPPORTED）
+```
+
+離線環境下那個「新 fleet 自帶的 depot」是空的，也拿不到 Broadcom 內容。
+
+### 8.5 影響範圍與取捨
+
+**里程碑 1–5 全部成功且服務正常** —— SDDC Manager、converge 的 vCenter+NSX、Management Platform、
+**VCF Operations**、Management Services 都好了。卡住的只有 VCF Automation。
+
+若環境本來就不使用 VCFA（精靈只是強制要求填欄位），可以直接收工驗收，不必修。
+
+> ⚠️ **不要隨手按 Cancel**：取消部署有回滾風險，可能把已經建好的管理層一起拆掉。
+
+### 8.6 診斷用的節點存取備忘
+
+- **installer**：SSH 帳號 `vcf`（不是 root）。
+- **VSP 節點**：`/etc/kubernetes/admin.conf` 是 **0 bytes**，`kubectl` 會退回 `localhost:8080` 而失敗 →
+  這些節點只能用 **`crictl`** 診斷（`crictl ps`、`crictl logs <id>`）。
+- **VCFA runtime（vspp2-r2）**：`admin.conf` 正常，是單節點 k8s control-plane，`kubectl --kubeconfig=` 可用。
+- 所有節點的 SSH 帳號是 `vmware-system-user`，密碼在部署時的 **REVIEW PASSWORDS** 裡（要先點開 `eye` 才看得到值）。
+
 
 ---
 
