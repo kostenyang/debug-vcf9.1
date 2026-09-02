@@ -29,6 +29,9 @@
 
 ## 1. 五條路的結論表
 
+![VCF Operations 失效時的決策流程](images/fig-decision.png)
+
+
 | # | 路徑 | 結果 | 原因 / 訊息 |
 |---|---|---|---|
 | A | Ops 主控台內建 redeploy / repair | ❌ **不存在** | 介面只有 Add Node / Scale Out |
@@ -87,6 +90,9 @@ curl -sk https://<ops>/suite-api/api/deployment/node/status \
 
 ## 4. converge：既有 vCenter+NSX ＋ 重建管理層
 
+![converge 操作流程與關卡](images/fig-converge-flow.png)
+
+
 **適用**：Ops（或整個管理層）救不回、也沒有備份，但 **vCenter / NSX / 工作負載都還健康**。
 
 **代價（先講清楚）**
@@ -94,6 +100,8 @@ curl -sk https://<ops>/suite-api/api/deployment/node/status \
 - 舊 SDDC Manager / 管理服務在 vCenter 內的註冊要**先清乾淨**（VCF 沒有官方 decommission 流程）。
 - 新管理元件要**一組全新的 FQDN / IP**（舊名稱與 VIP 仍被舊元件佔用）。
 - **既有 vCenter / NSX 會被沿用，VM 不受影響。**
+
+![converge 前後對照](images/fig-before-after.png)
 
 ### 4.0 前置檢查表
 
@@ -196,6 +204,8 @@ Set-Cluster -Cluster 'vcf-m02-cl01' -DrsAutomationLevel FullyAutomated -Confirm:
 | 3 | Deploy and configure VCF Management Platform | 42 |
 | 4 | Deploy and configure the operations appliance | 14 |
 | 5 | Deploy and configure VCF Management Services | 17 |
+
+![部署時間軸](images/fig-timeline.png)
 
 ### 4.9 ⚠️ 按下 DEPLOY 就沒有回頭路：舊 VSP / VCFA 平台 VM 會被自動刪除
 
