@@ -22,6 +22,7 @@
 | Review 頁顯示 `Deployment specification has been changed. Validation needs to be re-run.` | [§4.5 驗證會過期](#45-驗證結果會過期改欄位就要-re-run) |
 | 驗證失敗 `Cluster does not have DRS fully automated` | [§4.6 DRS 必須 Fully Automated](#46-唯一真正的驗證失敗drs-要-fully-automated) |
 | **VSP supervisor VM 關掉後「自己又開回來」** | [§5 互相救援不是有鬼](#5-vsp-supervisor-vm-自己開回來的真相) |
+| **park 的舊 VM 被自動刪掉了** | [§4.9 沒有回頭路](#49-️按下-deploy-就沒有回頭路舊-vsp--vcfa-平台-vm-會被自動刪除) |
 | 部署後登不進新元件（不知道密碼） | [§4.7 自動產生的密碼](#47-自動產生的密碼一定要匯出) |
 
 ---
@@ -195,6 +196,40 @@ Set-Cluster -Cluster 'vcf-m02-cl01' -DrsAutomationLevel FullyAutomated -Confirm:
 | 3 | Deploy and configure VCF Management Platform | 42 |
 | 4 | Deploy and configure the operations appliance | 14 |
 | 5 | Deploy and configure VCF Management Services | 17 |
+
+### 4.9 ⚠️ 按下 DEPLOY 就沒有回頭路：舊 VSP / VCFA 平台 VM 會被自動刪除
+
+實測：舊管理元件只做了「關機＋改名 `-OLD-<日期>`」（**沒有人手動刪**），但部署過程自行移除了：
+
+```
+00:52:40-42  Removed kosten-vcf91-vspp-{2j7n4,jw9xp,l5jwx,pkjn9}-OLD-20260901   ← 4 台舊 VSP 節點
+06:46:34     Removed vcf-services-runtime-template-9.1.0.0200.25555874          ← 範本
+06:46:37     Removed kosten-vcf91-vcfa-platform-8jcj4-OLD-20260901              ← 舊 VCFA 平台
+08:20:42     Removed bootstrap-vm-cNw85G                                        ← CAPV bootstrap（正常）
+```
+
+仍存活（關機）：`sddc-OLD` / `ops-coll-OLD` / `lic-OLD` —— **appliance 類的舊元件不會被動**。
+
+> **改名不是保護**。VSP / VCFA 平台這類「由 supervisor（CAPV）管理」的 VM，converge 開跑後會被回收。
+> 真的要留退路，**事前另外冷備份**（匯出 OVF 或快照另存），不能只靠 park。
+
+```powershell
+# 事後查是誰刪的
+Get-VIEvent -Start (Get-Date).AddHours(-22) -MaxSamples 20000 |
+  Where-Object { $_.FullFormattedMessage -match 'Removed' } |
+  Sort-Object CreatedTime | ForEach-Object { "[{0}] {1}" -f $_.CreatedTime, $_.FullFormattedMessage }
+```
+
+### 4.10 部署時會多冒出第 6 個里程碑
+
+精靈的 Review 只列 5 個里程碑，實際部署會多出 **`Deploy and configure VCF Automation`（8 子任務）**。
+其中 `Install Service Using Fleet lifecycle` 是整場最慢的一步（巢狀儲存上以**小時**計）。
+判斷「還在跑 vs 卡死」不要只看 UI，看 VCFA runtime 節點與 supervisor 的 CPU：
+
+```powershell
+Get-Stat -Entity (Get-VM '*vspp2*') -Stat cpu.usage.average -Start (Get-Date).AddMinutes(-40) |
+  Measure-Object Value -Average -Maximum      # 有負載＝在裝
+```
 
 ---
 
