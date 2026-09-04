@@ -384,6 +384,23 @@ GET /v1/services-config  # VCF_DEPOT 指向新建 fleet 的內建 depot（/depot
 
 > ⚠️ **不要隨手按 Cancel**：取消部署有回滾風險，可能把已經建好的管理層一起拆掉。
 
+### 8.5b VCF 9.1.1 可能解掉這個卡點（尚待驗證）
+
+VCF **9.1.1** 的新增功能之一是「**離線 depot 支援 HTTP 與自訂 URL 路徑**」——
+installer UI 開始接受非 HTTPS 端點與自訂路徑的離線儲存庫。
+
+這正對本節的根因：卡點就是 fleet depot 指向**新 fleet 內建的空 depot**，
+而 rtolab 既有的離線 depot 是 **nginx HTTP :8888**（`172.16.10.50`），9.1.0 的 UI 不吃。
+
+> ⚠️ **尚未實測**：還不確定 9.1.1 的離線 depot 設定能否套用到**已經部署好的 fleet**
+> （而不只是新裝時指定）。要在 9.1.1 上重跑才能下結論。
+
+9.1.1 另外兩條也跟本手冊有關：**VCFMS footprint 縮減**（1 CP + 3 worker → 1 CP + **2** worker，
+worker 12 vCPU / 24 GB，升級後**不會自動套用**，要手動跑腳本）與
+**非 vSAN ESA HCL 磁碟的 UI 內建選項**（取代手動 silence `nvmeonhcl`）。
+
+摘要與出處：lab-info 的 `reference/vcf-9.1.1-whats-new.md`、`runbooks/vcfms-footprint-reduction.md`。
+
 ### 8.6 診斷用的節點存取備忘
 
 - **installer**：SSH 帳號 `vcf`（不是 root）。
