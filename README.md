@@ -40,6 +40,7 @@
 | 要**重建整個管理層**但保留既有 vCenter/NSX（installer converge）；精靈卡 `IP Pool should be at least 12` / `DRS fully automated` / `certificate chain` | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §4 |
 | **VSP supervisor VM 關掉後自己又開回來** | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §5 |
 | 要在 SDDC Manager 把 cluster 的 **principal datastore** 改成新的 datastore（KB 452458，換 LUN 的最後一步）| [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) |
+| 要把 **VCF Automation 從 fleet 正常移除**(KB 441333 `cleanup_component.py`);腳本報 401、不知道要刪幾個元件、③ 要 root | [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) + [scripts/kb441333-vcfa-removal](scripts/kb441333-vcfa-removal/) |
 | 要**優雅重開 VCFMS / VSP 叢集**；開機後節點卡 `SchedulingDisabled`、drain 逾時（KB 440874 / 440862 / 448334）| [scripts/vcfms-restart](scripts/vcfms-restart/) |
 | 只想找指令 | [reference/commands.md](reference/commands.md) |
 
@@ -57,6 +58,7 @@
 7. [outer-resources](07-outer-resources.md) — 外層 CPU 超賣、vSAN 容量、PSOD、DRS
 8. [ops-loss-and-mgmt-rebuild](08-ops-loss-and-mgmt-rebuild.md) — VCF Operations 救不回時的五條路、installer converge 重建管理層全流程與踩雷、VSP 節點互相救援
 - [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) — KB 452458 更換 principal datastore：交付文件 docx、產生器、腳本、實測紀錄
+- [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) — KB 441333 移除 VCF Automation:三步(VCFA → Migration service engine → runtime)、VSP 帳號 admin、③ 要 root;21 頁 docx
 - [scripts/vcfms-restart](scripts/vcfms-restart/) — VCFMS 優雅重開機腳本 + KB 440874/440862/448334 規則
 - [reference/commands](reference/commands.md) — esxcli / PowerCLI / REST 速查
 

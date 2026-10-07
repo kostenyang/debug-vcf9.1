@@ -1,0 +1,82 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","Noto Sans TC",sans-serif;background:#fff;padding:26px 32px;width:1360px}
+h1{font-size:23px;color:#1F4E79}
+.sub{font-size:13.5px;color:#777;margin:4px 0 18px}
+.row{display:grid;grid-template-columns:200px 1fr 1fr 1fr;gap:12px;align-items:stretch}
+.hdr{font-size:12.5px;color:#fff;font-weight:bold;padding:7px 10px;border-radius:5px;text-align:center}
+.h0{background:#555}.h1{background:#1F4E79}.h2{background:#6A4C93}.h3{background:#B77E00}
+.cell{border:2px solid #d8dde3;border-radius:7px;padding:10px 12px;font-size:12.5px;line-height:1.75;background:#fff}
+.label{font-weight:bold;color:#333;font-size:13px}
+code{background:#eef3f8;padding:0 4px;border-radius:3px;font-family:Consolas,monospace;font-size:11.5px}
+.ok{color:#2E7D32;font-weight:bold}.skip{color:#999}.del{color:#C62828;font-weight:bold}
+.t{display:inline-block;background:#1F4E79;color:#fff;border-radius:3px;padding:0 6px;font-size:11px;margin-left:4px}
+.t.r{background:#C62828}
+.gap{height:10px}
+.note{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.box{border:2px solid #C62828;border-radius:8px;background:#FFF5F5;padding:11px 14px;font-size:12.5px;line-height:1.8}
+.box.g{border-color:#2E7D32;background:#F3FAF4}
+.box b{color:#C62828}.box.g b{color:#2E7D32}
+</style></head><body>
+<h1>KB 441333 — VCF Automation 正常移除:三條指令各碰到哪裡</h1>
+<div class="sub">在 SDDC Manager 上依序執行 cleanup_component.py。實測環境 VCF 9.1.1(greenfield 含 VCFA),總耗時約 38 分鐘</div>
+
+<div class="row">
+  <div class="hdr h0">碰到的地方</div>
+  <div class="hdr h1">① delete vsp-component<br>VCF Automation <span class="t">vcf</span></div>
+  <div class="hdr h2">② delete vsp-component<br>Migration service engine <span class="t">vcf</span></div>
+  <div class="hdr h3">③ delete vsp-cluster<br>VCFA services runtime <span class="t r">root</span></div>
+</div>
+<div class="gap"></div>
+<div class="row">
+  <div class="cell label">Fleet lifecycle<br><code>vcf-m03-fleet01</code></div>
+  <div class="cell"><span class="del">刪除</span> 60s,再等 120s 確認 404</div>
+  <div class="cell"><span class="del">刪除</span> 60s,再等 120s 確認 404</div>
+  <div class="cell"><span class="del">刪除</span> 60s,再等 120s 確認 404</div>
+</div>
+<div class="gap"></div>
+<div class="row">
+  <div class="cell label">管理 VSP<br><code>vcf-m03-vsp01</code></div>
+  <div class="cell"><span class="skip">404 → 跳過</span>(不在這裡)</div>
+  <div class="cell"><span class="skip">404 → 跳過</span></div>
+  <div class="cell"><span class="skip">只用來取 token</span></div>
+</div>
+<div class="gap"></div>
+<div class="row">
+  <div class="cell label">VCFA runtime<br>(consumption VSP)<br><code>vcf-m03-auto-platform</code></div>
+  <div class="cell"><span class="del">刪除</span> 1200s<br><code>prelude</code> namespace 70 個 pod 清空</div>
+  <div class="cell"><span class="del">刪除</span> 540s<br><code>vcd-migrator</code> pd + 2 pod 清空</div>
+  <div class="cell"><span class="skip">—</span></div>
+</div>
+<div class="gap"></div>
+<div class="row">
+  <div class="cell label">vCenter<br><code>vcf-m03-vc01</code></div>
+  <div class="cell"><span class="skip">不碰 VM</span></div>
+  <div class="cell"><span class="skip">不碰 VM</span></div>
+  <div class="cell"><span class="del">關機 + 刪除</span><br><code>vcf-m03-auto-platform-lmh4w</code>(vm-43)</div>
+</div>
+<div class="gap"></div>
+<div class="row">
+  <div class="cell label">SDDC Manager<br>platform DB</div>
+  <div class="cell"><span class="skip">—</span></div>
+  <div class="cell"><span class="skip">—</span></div>
+  <div class="cell"><span class="del">刪除</span> <code>vsp_cluster</code> 列(須 root)</div>
+</div>
+<div class="gap"></div>
+<div class="row">
+  <div class="cell label">耗時</div>
+  <div class="cell"><b>23 分 03 秒</b></div>
+  <div class="cell"><b>12 分 02 秒</b></div>
+  <div class="cell"><b>3 分 10 秒</b></div>
+</div>
+
+<div class="note">
+  <div class="box"><b>順序不能錯</b> —— 腳本<b>不會</b>檢查 runtime 上還有沒有元件。<br>
+  ① 進行中跑 <code>list</code> 會暫時看不到 Migration service engine,但它<b>還在</b>:② 仍在 Fleet 找到並刪除。<br>
+  ③ 之前務必再 <code>list vsp-component</code>,確認 runtime 上只剩 0 個元件。</div>
+  <div class="box g"><b>不受影響的</b>:管理 VSP 上的 Identity broker、Fleet lifecycle、Salt、SDDC lifecycle、Telemetry、Software depot,<br>
+  以及 VCF Operations / NSX / vCenter / SDDC Manager。<br>
+  <b>不會被清的</b>:DNS 記錄(<code>auto-vip</code> / <code>auto-platform</code>)要自己刪。</div>
+</div>
+</body></html>
