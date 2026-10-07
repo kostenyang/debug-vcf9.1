@@ -163,10 +163,14 @@ python3 cleanup_component.py delete vsp-cluster -c <vsp-cluster id> \
 
 ---
 
-## 6. 移除後想再加回來 —— 先看 KB 441127
+## 6. 移除後想再加回來 —— KB 441127 的實際範圍
 
-VCFA 元件移除後再 import，會因 infrastructure properties 為 NULL 而 **import 失敗**（KB 441127）。
-如果目的是「拆掉重來」，要有心理準備：不是移除→再匯入就好，可能需要照 KB 處理或開 case。
+KB 441127 講的是 **VCF 9.0 → 9.1 升級**時卡在「Import legacy components」：VCFA 元件曾被移除又加回，
+component properties 回來了，但 infrastructure properties（DNS / NTP 等）是 NULL，導致 Salt RaaS / Salt master /
+Telemetry 等舊元件匯入失敗。
+
+✅ **2026-10-07 m03 實測（9.1.1）**：用本文三步移除 greenfield VCFA 之後，在同一個 fleet 匯入一套 vRA 8.18.1
+並升級成 VCF Automation 9.1.1 —— 匯入 5 分、precheck 一次全過、升級 4h47m 一次成功，**沒有遇到 NULL 問題**。
 
 ---
 
