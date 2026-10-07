@@ -6,9 +6,11 @@
 |---|---|
 | `VCF91-Imported-Cluster-Principal-Datastore-Change.docx` | 交付文件（16 頁，純文字＋表格＋指令，沒有截圖） |
 | `gen-principal-ds-doc.js` | 產生 docx 的腳本（docx-js）：`npm i docx` 後執行 `node gen-principal-ds-doc.js` |
+| `kb452458-primary-datastore.sh` + `SCRIPT-README.md` | export / update / verify / rollback 腳本（從 evs 複製過來） |
+| `kb452458-principal-datastore-api-test.md` | lab 實測紀錄（從 lab-info 複製過來） |
 
-相關：
-- 腳本（export / update / verify / rollback）：[kostenyang/evs `kb452458-primary-datastore/`](https://github.com/kostenyang/evs/tree/main/kb452458-primary-datastore)
+原始位置（仍保留）：
+- 腳本：[kostenyang/evs `kb452458-primary-datastore/`](https://github.com/kostenyang/evs/tree/main/kb452458-primary-datastore)
 - 實測紀錄：[kostenyang/lab-info `runbooks/kb452458-principal-datastore-api-test.md`](https://github.com/kostenyang/lab-info/blob/main/runbooks/kb452458-principal-datastore-api-test.md)
 
 重點坑：
