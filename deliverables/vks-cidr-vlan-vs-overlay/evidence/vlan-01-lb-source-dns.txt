@@ -1,0 +1,16 @@
+== LB source IP as seen on worker eth0 (NodePort 31462) while curling VIP 192.168.16.35
+curl VIP 200
+curl VIP 200
+11:04:09.064702 IP 192.168.16.7.4450 > 192.168.16.54.31462: Flags [SEW], seq 2332344103, win 64240, options [mss 1460,nop,wscale 8,nop,nop,sackOK], length 0
+11:04:09.065824 IP 192.168.16.54.31462 > 192.168.16.7.4450: Flags [S.], seq 995848152, ack 2332344104, win 64860, options [mss 1410,nop,nop,sackOK,nop,wscale 7], length 0
+11:04:09.109132 IP 192.168.16.7.4451 > 192.168.16.54.31462: Flags [SEW], seq 383703059, win 64240, options [mss 1460,nop,wscale 8,nop,nop,sackOK], length 0
+11:04:09.110083 IP 192.168.16.54.31462 > 192.168.16.7.4451: Flags [S.], seq 1678739257, ack 383703060, win 64860, options [mss 1410,nop,nop,sackOK,nop,wscale 7], length 0
+== conntrack on worker for NodePort
+tcp      6 80 TIME_WAIT src=192.168.16.7 dst=192.168.16.54 sport=4447 dport=31462 src=100.96.1.3 dst=100.96.1.1 sport=8080 dport=16628 [ASSURED] mark=0 use=1
+tcp      6 80 TIME_WAIT src=192.168.16.7 dst=192.168.16.54 sport=4446 dport=31462 src=100.96.1.2 dst=100.96.1.1 sport=8080 dport=6695 [ASSURED] mark=0 use=1
+tcp      6 118 TIME_WAIT src=192.168.16.7 dst=192.168.16.54 sport=4450 dport=31462 src=100.96.1.3 dst=100.96.1.1 sport=8080 dport=18795 [ASSURED] mark=0 use=1
+== DNS from pod with FQDN
+Address: 100.64.0.1
+
+Name:	harbor01.home.lab
+Address: 10.0.0.86

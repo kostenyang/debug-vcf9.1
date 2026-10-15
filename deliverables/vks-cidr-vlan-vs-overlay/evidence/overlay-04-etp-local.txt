@@ -1,0 +1,12 @@
+$ externalTrafficPolicy=Local test (pod sees real LB source)
+service/nginx-lb patched
+VIP(Local) http 200 7.023000s
+VIP(Local) http 200 0.006919s
+VIP(Local) http 200 0.033050s
+-- nginx client IPs (last 6 lines each pod)
+      3 100.64.32.3
+      4 100.96.2.1
+      1 100.96.2.6
+      4 2026
+-- revert to Cluster
+service/nginx-lb patched

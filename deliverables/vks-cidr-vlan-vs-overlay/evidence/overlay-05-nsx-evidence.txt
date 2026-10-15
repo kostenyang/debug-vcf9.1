@@ -1,0 +1,54 @@
+$ NSX VPCs + subnets (overlay)
+-- kube-system_i2jkt
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys,json; [print('   ',s['id'], s.get('access_mode'), s.get('ip_addresses'), s.get('advanced_config',{}).get('connectivity_state')) for s in json.load(sys.stdin).get('results',[])]
+                                                                                                                                                        ~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+-- vks-ov_r409x
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys,json; [print('   ',s['id'], s.get('access_mode'), s.get('ip_addresses'), s.get('advanced_config',{}).get('connectivity_state')) for s in json.load(sys.stdin).get('results',[])]
+                                                                                                                                                        ~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\scoop\apps\python\current\Lib\json\decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+-- vmware-system-supervisor-services-vpc_oj2dz
+    _services Private ['100.64.32.0/24'] CONNECTED
+    pod-default-49f8ff0f_lfi0a Private_TGW ['172.26.0.0/28'] CONNECTED
+$ TGW state
+FULL_STACK_VPC
+$ host tunnels
+esx01 tunnels [('UP', '192.168.19.101', '->', '192.168.19.100'), ('UP', '192.168.19.101', '->', '192.168.19.102')]
+$ VPC NAT rules for vks-ov (SNAT)
+   DEFAULT default-vks-ov_r409x-172_30_0_0_16 SNAT 172.30.0.0/16 -> 192.168.16.7
+-- kube-system_i2jkt
+    _services Private ['100.64.32.0/24'] CONNECTED
+    vm-default-0db06de8_i2jkt Private ['172.30.0.0/29'] CONNECTED
+-- vks-ov_r409x
+    _services Private ['100.64.32.0/24'] CONNECTED
+    vks-cidr-overlay-hfchj-346aea4a_r409x Private ['172.30.0.0/27'] CONNECTED

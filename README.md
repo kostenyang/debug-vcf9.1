@@ -38,6 +38,7 @@
 | nested ESXi PSOD、外層 CPU 超賣、outer vSAN 撐爆、host `NotResponding` | [07-outer-resources.md](07-outer-resources.md) |
 | **VCF Operations 壞了/被刪，想拆掉重裝**；UI 找不到 remove/redeploy；同名同 IP 重裝 fleet 不認 | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §1–§3 |
 | 要**重建整個管理層**但保留既有 vCenter/NSX（installer converge）；精靈卡 `IP Pool should be at least 12` / `DRS fully automated` / `certificate chain` | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §4 |
+| **VKS 容器網段規劃**：Service/Pod CIDR 撞到 NSX 的 100.64.0.0/21（TGW transit）/ 100.64.32.0/24（VPC _services）會不會壞；VLAN-backed VPC 怎麼切成 overlay（TGW span、VNA、Auto SNAT、TEP） | [deliverables/vks-cidr-vlan-vs-overlay](deliverables/vks-cidr-vlan-vs-overlay/README.md)（實測報告 docx/pdf + 證據）、[scripts/vks-cidr-vlan-vs-overlay](scripts/vks-cidr-vlan-vs-overlay/README.md) |
 | **VSP supervisor VM 關掉後自己又開回來** | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §5 |
 | 要在 SDDC Manager 把 cluster 的 **principal datastore** 改成新的 datastore（KB 452458，換 LUN 的最後一步）| [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) |
 | 要把 **VCF Automation 從 fleet 正常移除**(KB 441333 `cleanup_component.py`);腳本報 401、不知道要刪幾個元件、③ 要 root | [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) + [scripts/kb441333-vcfa-removal](scripts/kb441333-vcfa-removal/) |

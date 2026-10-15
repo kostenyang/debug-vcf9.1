@@ -1,0 +1,8 @@
+apiVersion: crd.nsx.vmware.com/v1alpha1
+kind: SubnetSet
+metadata:
+  name: private
+  namespace: vks-lab
+spec:
+  accessMode: Private
+  ipv4SubnetSize: 32

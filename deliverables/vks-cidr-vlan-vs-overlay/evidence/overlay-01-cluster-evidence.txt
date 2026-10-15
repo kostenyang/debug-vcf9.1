@@ -1,0 +1,27 @@
+$ kubectl -n vks-ov get cluster vks-cidr-overlay -o jsonpath={.spec.clusterNetwork}
+{"pods":{"cidrBlocks":["100.96.0.0/18"]},"serviceDomain":"cluster.local","services":{"cidrBlocks":["100.64.0.0/13"]}}
+$ kubectl get nodes -o wide
+NAME                                      PODCIDR         IP           READY
+vks-cidr-overlay-jwnls-6crrg              100.96.0.0/24   172.30.0.2   True
+vks-cidr-overlay-np-1-9bq4l-4tfsh-f4td5   100.96.1.0/24   172.30.0.3   True
+$ kubectl get svc -A
+NAMESPACE           NAME                     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                  AGE
+default             kubernetes               ClusterIP   100.64.0.1       <none>        443/TCP                  3m51s
+default             supervisor               ClusterIP   None             <none>        6443/TCP                 3m43s
+kube-system         antrea                   ClusterIP   100.66.153.135   <none>        443/TCP                  2m18s
+kube-system         kube-dns                 ClusterIP   100.64.0.10      <none>        53/UDP,53/TCP,9153/TCP   3m50s
+kube-system         metrics-server           ClusterIP   100.68.44.58     <none>        443/TCP                  2m56s
+tkg-system          packaging-api            ClusterIP   100.64.128.95    <none>        443/TCP,8080/TCP         3m37s
+vmware-system-csi   vsphere-csi-controller   ClusterIP   100.67.124.153   <none>        2112/TCP,2113/TCP        2m55s
+$ antrea-agent.conf
+trafficEncapMode: encap
+noSNAT: false
+serviceCIDR: 100.64.0.0/13
+$ kubectl -n demo get pods -o wide
+NAME                     READY   STATUS             RESTARTS   AGE     IP           NODE                                      NOMINATED NODE   READINESS GATES
+nettest                  0/1     ImagePullBackOff   0          4m10s   100.96.1.4   vks-cidr-overlay-np-1-9bq4l-4tfsh-f4td5   <none>           <none>
+nginx-5658995685-2mz9q   0/1     ImagePullBackOff   0          4m10s   100.96.1.3   vks-cidr-overlay-np-1-9bq4l-4tfsh-f4td5   <none>           <none>
+nginx-5658995685-rt6sl   0/1     ImagePullBackOff   0          4m10s   100.96.1.2   vks-cidr-overlay-np-1-9bq4l-4tfsh-f4td5   <none>           <none>
+$ kubectl -n demo get svc
+NAME       TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)        AGE
+nginx-lb   LoadBalancer   100.71.219.107   192.168.16.9   80:30305/TCP   4m11s

@@ -1,0 +1,12 @@
+$ kubectl apply -f cidr-test/subnetset-private.yaml   (accessMode: Private, probe for overlay subnet on m06)
+Error from server (Forbidden): admission webhook "subnetset.validating.crd.nsx.vmware.com" denied the request: AccessMode other than Public/L2Only is not supported for VLANBackedVPC
+
+$ kubectl -n vks-lab get networkinfo -o jsonpath={.items[0].vpcs}
+[{"defaultSNATIP":"","loadBalancerIPAddresses":"192.168.16.7","name":"vks-lab_cw1ha","networkStack":"VLANBackedVPC"}]
+
+$ GET /api/vcenter/namespace-management/clusters/domain-c9 .vpc_network
+{"nsx_project":"/orgs/default/projects/default","auto_created":true,"default_private_cidrs":[],"vpc_connectivity_profile":".../vpc-connectivity-profiles/default"}
+
+$ NSX host transport nodes (m06 esx01-03): tz=VLAN only, ip_assignment=None (no TEP); profile tz overlay-tz-mgmt-nsxt NoIpv4 (vtepless)
+$ NSX TGW default transit_subnets=100.64.0.0/21 ; VPC vks-lab_cw1ha subnet _services Private 100.64.32.0/24 gw 100.64.32.1
+$ MTU: inner VDS 9000 / outer VDS7 9000 / NSX physical_uplink_mtu 9000 ; VLAN 9 192.168.19.0/24 = lab TEP VLAN, .100-.106 free, gw .254 up

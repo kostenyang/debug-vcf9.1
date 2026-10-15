@@ -1,0 +1,13 @@
+$ kubectl get endpoints -A | grep 100.64.32  (anything in VPC _services subnet?)
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+(none)
+$ kubectl -n default get endpoints supervisor
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+192.168.16.3
+$ kubectl -n default get svc supervisor -o jsonpath={.spec}
+None ClusterIP
+$ kubectl -n vmware-system-csi get cm / secrets referencing supervisor endpoint
+        kube-apiserver when using internal endpoints such as the internal service
+      endpoint = supervisor.default.svc
+      kapp.k14s.io/original: '{"apiVersion":"v1","data":{"cns-csi.conf":"[GC]\nendpoint
+        = supervisor.default.svc\nport = 6443\ntanzukubernetescluster-uid = b9d2b4b1-43db-4165-bfb0-5ac3769cf0f6\ntanzukubernetescluster-name

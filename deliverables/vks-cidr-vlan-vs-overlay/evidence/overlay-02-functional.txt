@@ -1,0 +1,52 @@
+$ kubectl -n demo get pods -o wide
+NAME                     READY   STATUS    RESTARTS   AGE     IP           NODE                                      NOMINATED NODE   READINESS GATES
+nettest                  1/1     Running   0          11s     100.96.2.6   vks-cidr-overlay-np-1-9bq4l-9dj6f-2tks5   <none>           <none>
+nginx-5658995685-5z449   1/1     Running   0          4m12s   100.96.2.2   vks-cidr-overlay-np-1-9bq4l-9dj6f-2tks5   <none>           <none>
+nginx-5658995685-cbnfg   1/1     Running   0          4m12s   100.96.2.3   vks-cidr-overlay-np-1-9bq4l-9dj6f-2tks5   <none>           <none>
+$ kubectl -n demo get svc nginx-lb
+NAME       TYPE           CLUSTER-IP       EXTERNAL-IP    PORT(S)        AGE
+nginx-lb   LoadBalancer   100.71.219.107   192.168.16.9   80:30305/TCP   16m
+coredns pod ip (on CP node) 100.96.2.4
+$ from pod nettest:
+--- nslookup kubernetes.default.svc.cluster.local
+
+
+--- nslookup harbor01.home.lab
+Name:	harbor01.home.lab
+Address: 10.0.0.86
+--- ClusterIP nginx-lb.demo.svc
+<title>Welcome to nginx!</title>
+--- cross-node pod->pod (worker -> coredns on CP) 9153
+# HELP coredns_build_info A metric with a constant '1' value labeled by version, revision, and goversion from which CoreDNS was built.
+--- egress Harbor https
+  HTTP/1.1 401 Unauthorized
+--- NSX transit 100.64.1.1 / VPC _services 100.64.32.1 from pod
+100.64.1.1 unreachable
+100.64.32.1 unreachable
+--- pod route
+default via 100.96.2.1 dev eth0 
+100.96.2.0/24 dev eth0 scope link  src 100.96.2.6 
+$ LB VIP from Windows host (outside VPC)
+VIP http 200 0.027798s
+VIP http 200 0.034412s
+VIP http 200 0.013899s
+$ nginx access log sources
+$ kubectl get nodes (after CA rollout)
+NAME                                      PODCIDR         IP           READY
+vks-cidr-overlay-jwnls-pxnpb              100.96.3.0/24   172.30.0.4   True
+vks-cidr-overlay-np-1-9bq4l-9dj6f-2tks5   100.96.2.0/24   172.30.0.5   True
+coredns pod on CP node vks-cidr-overlay-jwnls-pxnpb: 100.96.3.4
+$ cross-node: nettest(worker) -> coredns on CP 100.96.3.4:9153
+# HELP coredns_build_info A metric with a constant '1' value labeled by version, revision, and goversion from which CoreDNS was built.
+$ DNS: nslookup kubernetes.default.svc.cluster.local
+Name:	kubernetes.default.svc.cluster.local
+Address: 100.64.0.1
+$ nginx log client sources
+      4 10
+      3 100.96.2.1
+      1 100.96.2.6
+     16 2026
+$ conntrack on worker for NodePort 30305 (LB source IP)
+ipv4     2 tcp      6 97 TIME_WAIT src=100.64.32.3 dst=172.30.0.5 sport=4098 dport=30305 src=100.96.2.2 dst=100.96.2.1 sport=8080 dport=7202 [ASSURED] mark=0 zone=0 use=2
+ipv4     2 tcp      6 97 TIME_WAIT src=100.64.32.3 dst=172.30.0.5 sport=4096 dport=30305 src=100.96.2.2 dst=100.96.2.1 sport=8080 dport=37371 [ASSURED] mark=0 zone=0 use=2
+ipv4     2 tcp      6 97 TIME_WAIT src=100.64.32.3 dst=172.30.0.5 sport=4097 dport=30305 src=100.96.2.3 dst=100.96.2.1 sport=8080 dport=15550 [ASSURED] mark=0 zone=0 use=2
