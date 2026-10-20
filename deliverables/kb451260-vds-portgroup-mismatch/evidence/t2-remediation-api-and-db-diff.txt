@@ -1,0 +1,60 @@
+{"id":"3c2f8599-9d65-458f-8dd2-3c78082c47c1","status":"IN_PROGRESS"}
+
+{"id":"85d45473-a0a2-4197-b443-fb15df314b8a","status":"COMPLETED"}
+
+6c6
+<   "modification_time": 1792249978817,
+---
+>   "modification_time": 1792462503982,
+8,10c8,10
+<   "name": null,
+<   "niocs": "[{\"network\":\"vsan\",\"level\":\"high\",\"value\":100},{\"network\":\"vmotion\",\"level\":\"low\",\"value\":25},{\"network\":\"vdp\",\"level\":\"low\",\"value\":25},{\"network\":\"nfs\",\"level\":\"low\",\"value\":25},{\"network\":\"hbr\",\"level\":\"low\",\"value\":25},{\"network\":\"iSCSI\",\"level\":\"low\",\"value\":25},{\"network\":\"virtualMachine\",\"level\":\"high\",\"value\":100},{\"network\":\"management\",\"level\":\"normal\",\"value\":50},{\"network\":\"faultTolerance\",\"level\":\"low\",\"value\":25}]",
+<   "nsxt_switch_config": "{\"transportZones\":[{\"name\":\"overlay-tz-mgmt-nsxt\",\"id\":\"d02bd21d-3cc2-445f-adbb-e69088317d0c\",\"transportType\":\"OVERLAY\"}],\"ipAssignmentType\":\"NoIpv4\"}",
+---
+>   "name": "vcf-m02-cl01-vds01",
+>   "niocs": "[{\"network\":\"management\",\"value\":50},{\"network\":\"faultTolerance\",\"value\":25},{\"network\":\"vmotion\",\"value\":25},{\"network\":\"virtualMachine\",\"value\":100},{\"network\":\"iSCSI\",\"value\":25},{\"network\":\"nfs\",\"value\":25},{\"network\":\"hbr\",\"value\":25},{\"network\":\"vsan\",\"value\":100},{\"network\":\"vdp\",\"value\":25},{\"network\":\"backupNfc\",\"value\":50},{\"network\":\"nvmetcp\",\"value\":50},{\"network\":\"provisioning\",\"value\":50}]",
+>   "nsxt_switch_config": "{\"transportZones\":[{\"name\":\"overlay-tz-mgmt-nsxt\",\"id\":\"d02bd21d-3cc2-445f-adbb-e69088317d0c\",\"transportType\":\"OVERLAY\"}],\"hostSwitchOperationalMode\":\"ENS_INTERRUPT\",\"ipAssignmentType\":\"NoIpv4\"}",
+17c17,28
+<       "faultLevel": "NONE",
+---
+>       "id": "039748a0-dabb-4845-945d-bd773fc74344",
+>       "sourceId": "dvportgroup-81",
+>       "standbyUplinks": [],
+>       "transportType": "VMOTION",
+>       "type": "EARLY_BINDING",
+>       "vlanId": 0
+>     },
+>     {
+>       "activeUplinks": [
+>         "uplink1",
+>         "uplink2"
+>       ],
+19a31
+>       "standbyUplinks": [],
+30,33c42,45
+<       "id": "a189fd27-d9d4-413e-aa7c-64cfb9f312c1",
+<       "sourceId": "dvportgroup-22",
+<       "transportType": "VMOTION",
+<       "type": "EARLY_BINDING",
+---
+>       "id": "703147cf-ec67-4d4a-8c97-87e284caf404",
+>       "sourceId": "dvportgroup-24",
+>       "transportType": "VM_MANAGEMENT",
+>       "type": "EPHEMERAL",
+41d52
+<       "faultLevel": "NONE",
+43a55
+>       "standbyUplinks": [],
+46,57d57
+<       "vlanId": 0
+<     },
+<     {
+<       "activeUplinks": [
+<         "uplink1",
+<         "uplink2"
+<       ],
+<       "faultLevel": "NONE",
+<       "id": "703147cf-ec67-4d4a-8c97-87e284caf404",
+<       "sourceId": "dvportgroup-24",
+<       "transportType": "VM_MANAGEMENT",
+<       "type": "EPHEMERAL",

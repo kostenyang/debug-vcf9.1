@@ -1,0 +1,231 @@
+02:14:50  KB451260  cluster=vcf-m02-cl01 (85d45473-a0a2-4197-b443-fb15df314b8a)  mode=remediate  out=/tmp/kb-t2
+02:14:50  SDDC inventory VDS/port groups (before):
+  VDS vcf-m02-cl01-vds01  mtu=9000 nsx=true
+    - MANAGEMENT 	vcf-m02-cl01-vds01-pg-esx-mgmt	vlan=0	active=uplink1,uplink2
+    - VMOTION 	vcf-m02-cl01-vds01-pg-vmotion	vlan=0	active=uplink1,uplink2
+    - VSAN 	vcf-m02-cl01-vds01-pg-vsan	vlan=0	active=uplink1,uplink2
+    - VM_MANAGEMENT 	SDDC-DPortGroup-VM-Mgmt	vlan=0	active=uplink1,uplink2
+02:14:50  platform DB vds rows saved: /tmp/kb-t2/db-vds-before.json
+  DB vds 7ba6daf5-0943-4c34-8a04-7cc1b369f326 source_id=dvs-19  pg=MANAGEMENT:dvportgroup-21 VMOTION:dvportgroup-22 VSAN:dvportgroup-23 VM_MANAGEMENT:dvportgroup-24
+02:14:50  pre-validation (before): POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/validations?useAsyncValidation=true
+  [SUCCEEDED] Validate Platform Infrastructure State for Cluster Expansion workflow
+  [SUCCEEDED] Validate Platform Storage State for Cluster
+  [FAILED] Validate Network Infrastructure State for Cluster operations.
+      error : PortGroup configuration mismatch detected for VDS [vcf-m02-cl01-vds01] in cluster vcf-m02-cl01[85d45473-a0a2-4197-b443-fb15df314b8a]
+      remedy: Sync the VDS [vcf-m02-cl01-vds01]configuration between vCenter and SDDC Inventory by using the remediate API /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/remediations to ensure consistency for cluster vcf-m02-cl01. Please check logs for more details.
+  [PENDING] Perform set of validations for current workflow
+  [PENDING] Validate Cluster Expansion Specification
+02:15:01  network infrastructure state (before): FAIL
+02:15:01  POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/remediations {"name":"SDDC_NETWORKING_DATA_REMEDIATION"}
+02:15:01  remediationId=3c2f8599-9d65-458f-8dd2-3c78082c47c1 status=IN_PROGRESS
+02:15:07  remediation 3c2f8599-9d65-458f-8dd2-3c78082c47c1 -> COMPLETED
+02:15:07  SDDC inventory VDS/port groups (after):
+  VDS vcf-m02-cl01-vds01  mtu=9000 nsx=true
+    - VMOTION 	kb451260-oob-vmotion	vlan=0	active=uplink1,uplink2
+    - MANAGEMENT 	vcf-m02-cl01-vds01-pg-esx-mgmt	vlan=0	active=uplink1,uplink2
+    - VM_MANAGEMENT 	SDDC-DPortGroup-VM-Mgmt	vlan=0	active=uplink1,uplink2
+    - VSAN 	vcf-m02-cl01-vds01-pg-vsan	vlan=0	active=uplink1,uplink2
+02:15:07  platform DB vds rows saved: /tmp/kb-t2/db-vds-after.json
+  DB vds 7ba6daf5-0943-4c34-8a04-7cc1b369f326 source_id=dvs-19  pg=VMOTION:dvportgroup-81 MANAGEMENT:dvportgroup-21 VM_MANAGEMENT:dvportgroup-24 VSAN:dvportgroup-23
+02:15:07  inventory API view changed:
+11,12c11,12
+<             "level": "high",
+<             "shares": 100
+---
+>             "level": "custom",
+>             "shares": 50
+15c15
+<         "type": "vsan"
+---
+>         "type": "management"
+20c20,29
+<             "level": "low",
+---
+>             "level": "custom",
+>             "shares": 25
+>           }
+>         },
+>         "type": "faultTolerance"
+>       },
+>       {
+>         "niocTrafficResourceAllocation": {
+>           "sharesInfo": {
+>             "level": "custom",
+29c38,47
+<             "level": "low",
+---
+>             "level": "custom",
+>             "shares": 100
+>           }
+>         },
+>         "type": "virtualMachine"
+>       },
+>       {
+>         "niocTrafficResourceAllocation": {
+>           "sharesInfo": {
+>             "level": "custom",
+33c51
+<         "type": "vdp"
+---
+>         "type": "iSCSI"
+38c56
+<             "level": "low",
+---
+>             "level": "custom",
+47c65
+<             "level": "low",
+---
+>             "level": "custom",
+56c74,83
+<             "level": "low",
+---
+>             "level": "custom",
+>             "shares": 100
+>           }
+>         },
+>         "type": "vsan"
+>       },
+>       {
+>         "niocTrafficResourceAllocation": {
+>           "sharesInfo": {
+>             "level": "custom",
+60c87
+<         "type": "iSCSI"
+---
+>         "type": "vdp"
+65,66c92,93
+<             "level": "high",
+<             "shares": 100
+---
+>             "level": "custom",
+>             "shares": 50
+69c96
+<         "type": "virtualMachine"
+---
+>         "type": "backupNfc"
+74c101
+<             "level": "normal",
+---
+>             "level": "custom",
+78c105
+<         "type": "management"
+---
+>         "type": "nvmetcp"
+83,84c110,111
+<             "level": "low",
+<             "shares": 25
+---
+>             "level": "custom",
+>             "shares": 50
+87c114
+<         "type": "faultTolerance"
+---
+>         "type": "provisioning"
+90a118
+>       "hostSwitchOperationalMode": "ENS_INTERRUPT",
+104a133,144
+>         "id": "039748a0-dabb-4845-945d-bd773fc74344",
+>         "name": "kb451260-oob-vmotion",
+>         "portBindingType": "STATIC",
+>         "standbyUplinks": [],
+>         "transportType": "VMOTION",
+>         "vlanId": 0
+>       },
+>       {
+>         "activeUplinks": [
+>           "uplink1",
+>           "uplink2"
+>         ],
+107a148
+>         "standbyUplinks": [],
+116,119c157,160
+<         "id": "a189fd27-d9d4-413e-aa7c-64cfb9f312c1",
+<         "name": "vcf-m02-cl01-vds01-pg-vmotion",
+<         "portBindingType": "STATIC",
+<         "transportType": "VMOTION",
+---
+>         "id": "703147cf-ec67-4d4a-8c97-87e284caf404",
+>         "name": "SDDC-DPortGroup-VM-Mgmt",
+>         "portBindingType": "EPHEMERAL",
+>         "transportType": "VM_MANAGEMENT",
+129a171
+>         "standbyUplinks": [],
+131,141d172
+<         "vlanId": 0
+<       },
+<       {
+<         "activeUplinks": [
+<           "uplink1",
+<           "uplink2"
+<         ],
+<         "id": "703147cf-ec67-4d4a-8c97-87e284caf404",
+<         "name": "SDDC-DPortGroup-VM-Mgmt",
+<         "portBindingType": "EPHEMERAL",
+<         "transportType": "VM_MANAGEMENT",
+02:15:07  platform DB vds rows changed:
+6c6
+<   "modification_time": 1792249978817,
+---
+>   "modification_time": 1792462503982,
+8,10c8,10
+<   "name": null,
+<   "niocs": "[{\"network\":\"vsan\",\"level\":\"high\",\"value\":100},{\"network\":\"vmotion\",\"level\":\"low\",\"value\":25},{\"network\":\"vdp\",\"level\":\"low\",\"value\":25},{\"network\":\"nfs\",\"level\":\"low\",\"value\":25},{\"network\":\"hbr\",\"level\":\"low\",\"value\":25},{\"network\":\"iSCSI\",\"level\":\"low\",\"value\":25},{\"network\":\"virtualMachine\",\"level\":\"high\",\"value\":100},{\"network\":\"management\",\"level\":\"normal\",\"value\":50},{\"network\":\"faultTolerance\",\"level\":\"low\",\"value\":25}]",
+<   "nsxt_switch_config": "{\"transportZones\":[{\"name\":\"overlay-tz-mgmt-nsxt\",\"id\":\"d02bd21d-3cc2-445f-adbb-e69088317d0c\",\"transportType\":\"OVERLAY\"}],\"ipAssignmentType\":\"NoIpv4\"}",
+---
+>   "name": "vcf-m02-cl01-vds01",
+>   "niocs": "[{\"network\":\"management\",\"value\":50},{\"network\":\"faultTolerance\",\"value\":25},{\"network\":\"vmotion\",\"value\":25},{\"network\":\"virtualMachine\",\"value\":100},{\"network\":\"iSCSI\",\"value\":25},{\"network\":\"nfs\",\"value\":25},{\"network\":\"hbr\",\"value\":25},{\"network\":\"vsan\",\"value\":100},{\"network\":\"vdp\",\"value\":25},{\"network\":\"backupNfc\",\"value\":50},{\"network\":\"nvmetcp\",\"value\":50},{\"network\":\"provisioning\",\"value\":50}]",
+>   "nsxt_switch_config": "{\"transportZones\":[{\"name\":\"overlay-tz-mgmt-nsxt\",\"id\":\"d02bd21d-3cc2-445f-adbb-e69088317d0c\",\"transportType\":\"OVERLAY\"}],\"hostSwitchOperationalMode\":\"ENS_INTERRUPT\",\"ipAssignmentType\":\"NoIpv4\"}",
+17c17,28
+<       "faultLevel": "NONE",
+---
+>       "id": "039748a0-dabb-4845-945d-bd773fc74344",
+>       "sourceId": "dvportgroup-81",
+>       "standbyUplinks": [],
+>       "transportType": "VMOTION",
+>       "type": "EARLY_BINDING",
+>       "vlanId": 0
+>     },
+>     {
+>       "activeUplinks": [
+>         "uplink1",
+>         "uplink2"
+>       ],
+19a31
+>       "standbyUplinks": [],
+30,33c42,45
+<       "id": "a189fd27-d9d4-413e-aa7c-64cfb9f312c1",
+<       "sourceId": "dvportgroup-22",
+<       "transportType": "VMOTION",
+<       "type": "EARLY_BINDING",
+---
+>       "id": "703147cf-ec67-4d4a-8c97-87e284caf404",
+>       "sourceId": "dvportgroup-24",
+>       "transportType": "VM_MANAGEMENT",
+>       "type": "EPHEMERAL",
+41d52
+<       "faultLevel": "NONE",
+43a55
+>       "standbyUplinks": [],
+46,57d57
+<       "vlanId": 0
+<     },
+<     {
+<       "activeUplinks": [
+<         "uplink1",
+<         "uplink2"
+<       ],
+<       "faultLevel": "NONE",
+<       "id": "703147cf-ec67-4d4a-8c97-87e284caf404",
+<       "sourceId": "dvportgroup-24",
+<       "transportType": "VM_MANAGEMENT",
+<       "type": "EPHEMERAL",
+02:15:07  pre-validation (after): POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/validations?useAsyncValidation=true
+  [SUCCEEDED] Validate Platform Infrastructure State for Cluster Expansion workflow
+  [SUCCEEDED] Validate Platform Storage State for Cluster
+  [SUCCEEDED] Validate Network Infrastructure State for Cluster operations.
+  [SUCCEEDED] Perform set of validations for current workflow
+  [FAILED] Validate Cluster Expansion Specification
+      error : ESXi Host 00000000-0000-0000-0000-000000451260 not found
+      remedy: -
+02:15:24  network infrastructure state (after): PASS
+02:15:24  done - retry the cluster expansion. Logs/backups: /tmp/kb-t2

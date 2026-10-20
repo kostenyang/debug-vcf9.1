@@ -1,0 +1,46 @@
+02:17:29  KB451260  cluster=vcf-m02-cl01 (85d45473-a0a2-4197-b443-fb15df314b8a)  mode=remediate  out=/tmp/kb-t3
+02:17:29  SDDC inventory VDS/port groups (before):
+  VDS vcf-m02-cl01-vds01  mtu=9000 nsx=true
+    - VMOTION 	kb451260-oob-vmotion	vlan=0	active=uplink1,uplink2
+    - MANAGEMENT 	vcf-m02-cl01-vds01-pg-esx-mgmt	vlan=0	active=uplink1,uplink2
+    - VM_MANAGEMENT 	SDDC-DPortGroup-VM-Mgmt	vlan=0	active=uplink1,uplink2
+    - VSAN 	vcf-m02-cl01-vds01-pg-vsan	vlan=0	active=uplink1,uplink2
+02:17:29  platform DB vds rows saved: /tmp/kb-t3/db-vds-before.json
+  DB vds 7ba6daf5-0943-4c34-8a04-7cc1b369f326 source_id=dvs-19  pg=VMOTION:dvportgroup-81 MANAGEMENT:dvportgroup-21 VM_MANAGEMENT:dvportgroup-24 VSAN:dvportgroup-23
+02:17:29  pre-validation (before): POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/validations?useAsyncValidation=true
+  [SUCCEEDED] Validate Platform Infrastructure State for Cluster Expansion workflow
+  [SUCCEEDED] Validate Platform Storage State for Cluster
+  [FAILED] Validate Network Infrastructure State for Cluster operations.
+      error : PortGroup configuration mismatch detected for VDS [vcf-m02-cl01-vds01] in cluster vcf-m02-cl01[85d45473-a0a2-4197-b443-fb15df314b8a]
+      remedy: Sync the VDS [vcf-m02-cl01-vds01]configuration between vCenter and SDDC Inventory by using the remediate API /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/remediations to ensure consistency for cluster vcf-m02-cl01. Please check logs for more details.
+  [PENDING] Perform set of validations for current workflow
+  [PENDING] Validate Cluster Expansion Specification
+02:17:40  network infrastructure state (before): FAIL
+02:17:40  POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/remediations {"name":"SDDC_NETWORKING_DATA_REMEDIATION"}
+02:17:41  remediationId=8cdb7546-0445-4452-ae1f-86cd0e13be62 status=IN_PROGRESS
+02:17:46  remediation 8cdb7546-0445-4452-ae1f-86cd0e13be62 -> COMPLETED
+02:17:46  SDDC inventory VDS/port groups (after):
+  VDS vcf-m02-cl01-vds01  mtu=9000 nsx=true
+    - VMOTION 	vcf-m02-cl01-vds01-pg-vmotion	vlan=0	active=uplink1,uplink2
+    - MANAGEMENT 	vcf-m02-cl01-vds01-pg-esx-mgmt	vlan=0	active=uplink1,uplink2
+    - VM_MANAGEMENT 	SDDC-DPortGroup-VM-Mgmt	vlan=0	active=uplink1,uplink2
+    - VSAN 	vcf-m02-cl01-vds01-pg-vsan	vlan=0	active=uplink1,uplink2
+02:17:46  platform DB vds rows saved: /tmp/kb-t3/db-vds-after.json
+  DB vds 7ba6daf5-0943-4c34-8a04-7cc1b369f326 source_id=dvs-19  pg=VMOTION:dvportgroup-22 MANAGEMENT:dvportgroup-21 VM_MANAGEMENT:dvportgroup-24 VSAN:dvportgroup-23
+02:17:46  port groups in SDDC inventory (API view)  VDS|traffic|portgroup:
+    before: vcf-m02-cl01-vds01|VMOTION|kb451260-oob-vmotion|vlan=0
+    after : vcf-m02-cl01-vds01|VMOTION|vcf-m02-cl01-vds01-pg-vmotion|vlan=0
+02:17:46  port group morefs in platform DB  dvs|traffic|moref:
+    before: dvs-19|VMOTION|dvportgroup-81
+    after : dvs-19|VMOTION|dvportgroup-22
+02:17:46  full before/after diffs: /tmp/kb-t3/vdses.diff /tmp/kb-t3/db-vds.diff
+02:17:46  pre-validation (after): POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/validations?useAsyncValidation=true
+  [SUCCEEDED] Validate Platform Infrastructure State for Cluster Expansion workflow
+  [SUCCEEDED] Validate Platform Storage State for Cluster
+  [SUCCEEDED] Validate Network Infrastructure State for Cluster operations.
+  [SUCCEEDED] Perform set of validations for current workflow
+  [FAILED] Validate Cluster Expansion Specification
+      error : ESXi Host 00000000-0000-0000-0000-000000451260 not found
+      remedy: -
+02:18:03  network infrastructure state (after): PASS
+02:18:03  done - retry the cluster expansion. Logs/backups: /tmp/kb-t3

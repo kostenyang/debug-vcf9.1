@@ -1,0 +1,19 @@
+02:12:51  KB451260  cluster=vcf-m02-cl01 (85d45473-a0a2-4197-b443-fb15df314b8a)  mode=check  out=/tmp/kb-t1
+02:12:52  SDDC inventory VDS/port groups (before):
+  VDS vcf-m02-cl01-vds01  mtu=9000 nsx=true
+    - MANAGEMENT 	vcf-m02-cl01-vds01-pg-esx-mgmt	vlan=0	active=uplink1,uplink2
+    - VMOTION 	vcf-m02-cl01-vds01-pg-vmotion	vlan=0	active=uplink1,uplink2
+    - VSAN 	vcf-m02-cl01-vds01-pg-vsan	vlan=0	active=uplink1,uplink2
+    - VM_MANAGEMENT 	SDDC-DPortGroup-VM-Mgmt	vlan=0	active=uplink1,uplink2
+02:12:52  platform DB vds rows saved: /tmp/kb-t1/db-vds-before.json
+  DB vds 7ba6daf5-0943-4c34-8a04-7cc1b369f326 source_id=dvs-19  pg=MANAGEMENT:dvportgroup-21 VMOTION:dvportgroup-22 VSAN:dvportgroup-23 VM_MANAGEMENT:dvportgroup-24
+02:12:52  pre-validation (before): POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/validations?useAsyncValidation=true
+  [SUCCEEDED] Validate Platform Infrastructure State for Cluster Expansion workflow
+  [SUCCEEDED] Validate Platform Storage State for Cluster
+  [FAILED] Validate Network Infrastructure State for Cluster operations.
+      error : PortGroup configuration mismatch detected for VDS [vcf-m02-cl01-vds01] in cluster vcf-m02-cl01[85d45473-a0a2-4197-b443-fb15df314b8a]
+      remedy: Sync the VDS [vcf-m02-cl01-vds01]configuration between vCenter and SDDC Inventory by using the remediate API /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/remediations to ensure consistency for cluster vcf-m02-cl01. Please check logs for more details.
+  [PENDING] Perform set of validations for current workflow
+  [PENDING] Validate Cluster Expansion Specification
+02:13:04  network infrastructure state (before): FAIL
+02:13:04  MISMATCH - rerun with --remediate to sync the SDDC inventory from vCenter

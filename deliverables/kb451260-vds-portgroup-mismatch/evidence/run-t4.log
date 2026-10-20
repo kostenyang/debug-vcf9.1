@@ -1,0 +1,17 @@
+02:18:27  KB451260  cluster=vcf-m02-cl01 (85d45473-a0a2-4197-b443-fb15df314b8a)  mode=remediate  out=/tmp/kb-t4
+02:18:27  SDDC inventory VDS/port groups (before):
+  VDS vcf-m02-cl01-vds01  mtu=9000 nsx=true
+    - VMOTION 	vcf-m02-cl01-vds01-pg-vmotion	vlan=0	active=uplink1,uplink2
+    - MANAGEMENT 	vcf-m02-cl01-vds01-pg-esx-mgmt	vlan=0	active=uplink1,uplink2
+    - VM_MANAGEMENT 	SDDC-DPortGroup-VM-Mgmt	vlan=0	active=uplink1,uplink2
+    - VSAN 	vcf-m02-cl01-vds01-pg-vsan	vlan=0	active=uplink1,uplink2
+02:18:27  pre-validation (before): POST /v1/clusters/85d45473-a0a2-4197-b443-fb15df314b8a/validations?useAsyncValidation=true
+  [SUCCEEDED] Validate Platform Infrastructure State for Cluster Expansion workflow
+  [SUCCEEDED] Validate Platform Storage State for Cluster
+  [SUCCEEDED] Validate Network Infrastructure State for Cluster operations.
+  [SUCCEEDED] Perform set of validations for current workflow
+  [FAILED] Validate Cluster Expansion Specification
+      error : ESXi Host 00000000-0000-0000-0000-000000451260 not found
+      remedy: -
+02:18:43  network infrastructure state (before): PASS
+02:18:43  network state already OK - nothing to remediate (use --force to run anyway)
