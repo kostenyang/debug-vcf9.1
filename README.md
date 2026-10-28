@@ -36,6 +36,7 @@
 | **VCFA** `.77`/`/provider/home` 不通、災後 appliance 救活 | [06-vcfa.md](06-vcfa.md) §1 |
 | **VCFA** gateway 404/503、pod `FailedMount globalmount` / CrashLoop、region quota 失敗 | [06-vcfa.md](06-vcfa.md) §2–§3 |
 | nested ESXi PSOD、外層 CPU 超賣、outer vSAN 撐爆、host `NotResponding` | [07-outer-resources.md](07-outer-resources.md) |
+| **某台外層 host 上的東西全部變慢 / 掉包**（VCFA API 突然 15–24 秒、nested vCenter / ESXi ping 掉 90%+，但叢集內打很快）；vCenter 事件 `vmnicX is down/up` 一直跳、`uplink redundancy lost`；`vmkernel.log` `Rx hang detected: reset it`；換交換器後 host 收得到送不出（交換器埠 In 凍結 Out 在增）；外層 host 重開後要把 VM 開回來 | [09-outer-physical-uplink.md](09-outer-physical-uplink.md) + [scripts/outer-uplink-triage](scripts/outer-uplink-triage/) |
 | **VCF Operations 壞了/被刪，想拆掉重裝**；UI 找不到 remove/redeploy；同名同 IP 重裝 fleet 不認 | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §1–§3 |
 | 要**重建整個管理層**但保留既有 vCenter/NSX（installer converge）；精靈卡 `IP Pool should be at least 12` / `DRS fully automated` / `certificate chain` | [08-ops-loss-and-mgmt-rebuild.md](08-ops-loss-and-mgmt-rebuild.md) §4 |
 | **VKS 容器網段規劃**：Service/Pod CIDR 撞到 NSX 的 100.64.0.0/21（TGW transit）/ 100.64.32.0/24（VPC _services）會不會壞；VLAN-backed VPC 怎麼切成 overlay（TGW span、VNA、Auto SNAT、TEP） | [deliverables/vks-cidr-vlan-vs-overlay](deliverables/vks-cidr-vlan-vs-overlay/README.md)（實測報告 docx/pdf + 證據）、[scripts/vks-cidr-vlan-vs-overlay](scripts/vks-cidr-vlan-vs-overlay/README.md) |
@@ -59,6 +60,8 @@
 6. [vcfa](06-vcfa.md) — VCFA 應用層：appliance 本質與端點、災後救活、gateway 404/CSI/SPS、region quota 過載、provider 啟用
 7. [outer-resources](07-outer-resources.md) — 外層 CPU 超賣、vSAN 容量、PSOD、DRS
 8. [ops-loss-and-mgmt-rebuild](08-ops-loss-and-mgmt-rebuild.md) — VCF Operations 救不回時的五條路、installer converge 重建管理層全流程與踩雷、VSP 節點互相救援
+9. [outer-physical-uplink](09-outer-physical-uplink.md) — 外層實體交換器 / 上行故障：把「慢」切段、依 host 分組 ping 矩陣、igbn Rx hang、vSwitch0 空上行、VDS MGMT VLAN 對錯、重開後照清單開機
+- [scripts/outer-uplink-triage](scripts/outer-uplink-triage/) — 外層 host 上行分診（ping 矩陣 / 上行健康檢查，唯讀）+ 開機清單存檔 / 還原
 - [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) — KB 452458 更換 principal datastore：交付文件 docx、產生器、腳本、實測紀錄
 - [deliverables/kb451260-vds-portgroup-mismatch](deliverables/kb451260-vds-portgroup-mismatch/) — KB 451260 cluster 擴充報 PortGroup mismatch:`POST /v1/clusters/{id}/remediations {"name":"SDDC_NETWORKING_DATA_REMEDIATION"}`,含不需備用主機的唯讀預檢
 - [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) — KB 441333 移除 VCF Automation:三步(VCFA → Migration service engine → runtime)、VSP 帳號 admin、③ 要 root;21 頁 docx
