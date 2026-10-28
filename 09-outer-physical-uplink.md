@@ -190,10 +190,40 @@ Dell 上管理網段 10.0.0.0/23 是 **VLAN 1 untagged**；但 VDS7「MGMT」dvp
 
 ---
 
-## 7. 仍待處理（截至 2026-10-28 23:00）
+## 7. 換交換器後的連帶問題：DC 第二張網卡撞 IP（已修）
 
-- `.200` 跳板機的 Ethernet1（DPG-802.1Q）用 DHCP 拿到 **10.0.0.18 = sftp-server 的固定 IP** → `.97` VDS 有上行後真的撞 IP。
+**症狀**：`.200`（home.lab 的 AD DC / 跳板機 `KADDNS`）的 Ethernet1 掛在 trunk portgroup `DPG-802.1Q` 上。換交換器前它一直是 169.254 的 APIPA（等於沒在用）；換到 Dell 後 trunk 的 native VLAN 1 通了，Ethernet1 就從家用路由器 `10.0.0.1` 的 DHCP 拿到 **10.0.0.18 = sftp-server 的固定 IP**。副作用比撞 IP 更大：
+- DC 把 10.0.0.18 **註冊進 AD DNS**：`home.lab`（@）、`DomainDnsZones`、`ForestDnsZones`、`kaddns`、`_msdcs` 的 `gc` 都多一筆 → 查網域名稱時有一半機率被導到 sftp-server。
+- Ethernet1 的 DHCP 預設路由 metric 比較小 → DC 連外的流量全走 Ethernet1、來源是 10.0.0.18。
+
+**查法**：
+```powershell
+ipconfig /all                                                   # 看哪張卡 DHCP Enabled、DHCP Server、Lease
+Get-NetRoute -DestinationPrefix 0.0.0.0/0 | ft InterfaceAlias,NextHop,RouteMetric,InterfaceMetric
+Get-DnsServerResourceRecord -ZoneName home.lab -RRType A | ? { $_.RecordData.IPv4Address.IPAddressToString -eq '10.0.0.18' }
+Get-DnsServerResourceRecord -ZoneName _msdcs.home.lab -RRType A | ? { $_.RecordData.IPv4Address.IPAddressToString -eq '10.0.0.18' }
+```
+
+**修法（可逆）**：先備份 ipconfig / 路由 / 相關 DNS 紀錄，再處理 Ethernet1：
+```powershell
+Set-DnsClient -InterfaceAlias Ethernet1 -RegisterThisConnectionsAddress $false
+ipconfig /release Ethernet1
+Disable-NetAdapter -Name Ethernet1 -Confirm:$false
+nltest /dsregdns; Clear-DnsServerCache -Force; Clear-DnsClientCache
+```
+- 這樣做之後，那 5 筆 10.0.0.18 的 A 紀錄被 Windows **自動反註冊**；若還在，再用 `Remove-DnsServerResourceRecord` 逐筆刪。
+- ⚠️ `Get-DnsServerResourceRecord -Name '@'` 會把整個 zone 的 A 都撈回來，要再用 `HostName -eq '@'` 精確比對，不然會刪錯。
+- 不綁網卡的 persistent route（例 `172.16.10.0/24 → 10.0.1.254`，ifIndex 0）會自動改走 Ethernet0。
+- 驗證：`home.lab` / `kaddns` / `gc._msdcs` 只解析到 10.0.0.200；預設路由走 Ethernet0；10.0.0.18 的 ARP 對到 sftp-server 自己的 MAC、SSH 通；連外來源 10.0.0.200。
+- 還原：`Enable-NetAdapter Ethernet1`。
+- ⚠️ 根因還在：家用路由器的 DHCP pool 包含 .18，sftp-server 離線時這個位址可能再被發出去 → 要在路由器做保留或排除，或把 sftp-server 改到 pool 外。另外，DC 不要讓第二張網卡停在同一個網段上跑 DHCP。
+
+---
+
+## 8. 仍待處理（截至 2026-10-28 23:30）
+
 - `.97` VDS 仍 outOfSync（vsanDatastore 上那 2 個關機 VM 的 port）。
+- 家用路由器 DHCP pool 對 10.0.0.18 的保留 / 排除（見 §7）。
 - 2960 的 37 秒循環原因（STP 非 portfast 的推測）沒驗證：交換器已壞、也沒帳密。
 
 ---

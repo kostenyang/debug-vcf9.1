@@ -60,7 +60,7 @@
 6. [vcfa](06-vcfa.md) — VCFA 應用層：appliance 本質與端點、災後救活、gateway 404/CSI/SPS、region quota 過載、provider 啟用
 7. [outer-resources](07-outer-resources.md) — 外層 CPU 超賣、vSAN 容量、PSOD、DRS
 8. [ops-loss-and-mgmt-rebuild](08-ops-loss-and-mgmt-rebuild.md) — VCF Operations 救不回時的五條路、installer converge 重建管理層全流程與踩雷、VSP 節點互相救援
-9. [outer-physical-uplink](09-outer-physical-uplink.md) — 外層實體交換器 / 上行故障：把「慢」切段、依 host 分組 ping 矩陣、igbn Rx hang、vSwitch0 空上行、VDS MGMT VLAN 對錯、重開後照清單開機
+9. [outer-physical-uplink](09-outer-physical-uplink.md) — 外層實體交換器 / 上行故障：把「慢」切段、依 host 分組 ping 矩陣、igbn Rx hang、vSwitch0 空上行、VDS MGMT VLAN 對錯、重開後照清單開機、DC 第二張網卡 DHCP 撞 IP
 - [scripts/outer-uplink-triage](scripts/outer-uplink-triage/) — 外層 host 上行分診（ping 矩陣 / 上行健康檢查，唯讀）+ 開機清單存檔 / 還原
 - [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) — KB 452458 更換 principal datastore：交付文件 docx、產生器、腳本、實測紀錄
 - [deliverables/kb451260-vds-portgroup-mismatch](deliverables/kb451260-vds-portgroup-mismatch/) — KB 451260 cluster 擴充報 PortGroup mismatch:`POST /v1/clusters/{id}/remediations {"name":"SDDC_NETWORKING_DATA_REMEDIATION"}`,含不需備用主機的唯讀預檢
