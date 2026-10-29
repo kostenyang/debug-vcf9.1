@@ -133,8 +133,35 @@ Dell 上管理網段 10.0.0.0/23 是 **VLAN 1 untagged**；但 VDS7「MGMT」dvp
 
 ### 4.4 `.97` VDS outOfSync：`Failed to update port persistence location`
 
-`.97` 換上行後推 VDS 失敗，`.97` 長期 outOfSync。元兇是**關機中、放在 vsanDatastore 的 VM 的 port**：`.97` 沒掛 vsanDatastore → hostd「Skip saving dvport … vsan:…/.dvsData」→ **整批 applyDVPort 一起失敗**（SSD 上 VM 的 port 也沒套用）。
-繞法：`ReconfigureDVPort_Task` **只推開機中 VM 的 port** → `.97` 上 winjump01 / lichub01 / vrops / vcf9depot / sftp-server 全通。（那 2 個 vsan 上的 port 仍 outOfSync）
+`.97` 換上行後推 VDS 失敗，`.97` 長期 outOfSync。原因是有些 port 的 persistence location 在**已經不存在的 vsanDatastore**（`vsan:52af9b09…`，07-10 被重格），`.97` 沒掛它 → hostd「Skip saving dvport … vsan:…/.dvsData」→ **整批 applyDVPort 一起失敗**（SSD 上 VM 的 port 也沒套用）。vpxa 重啟、單純 Rectify 都沒用。
+
+**當下繞法**：`ReconfigureDVPort_Task` **只推開機中 VM 的 port** → `.97` 上 winjump01 / lichub01 / vrops / vcf9depot / sftp-server 全通（但 `.97` 仍顯示 outOfSync）。
+
+**根治（10-29）**：把擋住的 port 一個一個清掉。`.97` 上共 3 個：
+| port | portgroup | 是什麼 | 處理 |
+|---|---|---|---|
+| 1504 | MGMT（earlyBinding） | 死 template `Win2019-Tools` 的網卡（vmtx 在已不存在的 vsanDatastore） | 先把 vCenter 裡的設定匯出成 JSON，再 `UnregisterVM`（檔案早就不在，移除後無法再註冊 → 要先問擁有者） |
+| 3880 | VLAN35-pf（ephemeral） | **幽靈 port**：connectee = vmVnic nic 4001，但那台 VM 已不存在 | Refresh → remove |
+| 2098 | VLAN8-K8S（ephemeral） | 同上，另一個幽靈 port | Refresh → remove |
+
+找幽靈 port：列出綁在該 host 的所有 port，挑「有 Connectee、但 ConnectedEntity 是 null 或查不到」的：
+```powershell
+$dvs = Get-View -ViewType VmwareDistributedVirtualSwitch -Filter @{Name='^VDS7$'}
+$h   = Get-View -ViewType HostSystem -Filter @{Name='^10\.0\.0\.97$'}
+$c = New-Object VMware.Vim.DistributedVirtualSwitchPortCriteria; $c.Host = @($h.MoRef)
+$dvs.FetchDVPorts($c) | ? { $_.Connectee -and (-not $_.Connectee.ConnectedEntity -or -not (Get-View $_.Connectee.ConnectedEntity -EA 0)) } |
+  % { '{0} pg={1} nic={2}' -f $_.Key, $_.PortgroupKey, $_.Connectee.NicKey }
+```
+清掉（直接 remove 會報 **`The resource '<port>' is in use.`**，要先 `RefreshDVPortState` 讓 vCenter 跟 host 對帳、清掉 connectee）：
+```powershell
+$dvs.RefreshDVPortState(@('2098'))                                   # 之後 Connectee 變 null
+$s = New-Object VMware.Vim.DVPortConfigSpec; $s.Key = '2098'; $s.Operation = 'remove'
+$dvs.ReconfigureDVPort_Task(@($s))
+$mgr = Get-View $global:DefaultVIServer.ExtensionData.Content.DvSwitchManager
+$mgr.RectifyDvsOnHost_Task(@($h.MoRef))                              # Rectify 在 DistributedVirtualSwitchManager 上，不在 VDS 物件上
+```
+三個都清掉後 Rectify → `.97` **up**（`.95` / `.98` / `.97` 三台都 up），`.97` 上 VM 全通。
+> ⚠️ 只要清單裡還有一個壞 port，`RefreshDVPortState` 一次刷多個也會報 `Cannot complete a vSphere Distributed Switch operation for one or more host members`，但通常還是會把能清的清掉；**一次處理一個 port** 比較好判讀。
 
 ### 4.5 驗證
 
@@ -220,9 +247,8 @@ nltest /dsregdns; Clear-DnsServerCache -Force; Clear-DnsClientCache
 
 ---
 
-## 8. 仍待處理（截至 2026-10-28 23:30）
+## 8. 仍待處理（截至 2026-10-29 09:20）
 
-- `.97` VDS 仍 outOfSync（vsanDatastore 上那 2 個關機 VM 的 port）。
 - 家用路由器 DHCP pool 對 10.0.0.18 的保留 / 排除（見 §7）。
 - 2960 的 37 秒循環原因（STP 非 portfast 的推測）沒驗證：交換器已壞、也沒帳密。
 
