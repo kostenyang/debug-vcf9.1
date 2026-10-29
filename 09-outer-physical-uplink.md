@@ -163,6 +163,15 @@ $mgr.RectifyDvsOnHost_Task(@($h.MoRef))                              # Rectify �
 三個都清掉後 Rectify → `.97` **up**（`.95` / `.98` / `.97` 三台都 up），`.97` 上 VM 全通。
 > ⚠️ 只要清單裡還有一個壞 port，`RefreshDVPortState` 一次刷多個也會報 `Cannot complete a vSphere Distributed Switch operation for one or more host members`，但通常還是會把能清的清掉；**一次處理一個 port** 比較好判讀。
 
+**同一招第二次（10-29，`.98`）**：刪掉 6 個沒用的 portgroup（VLAN31–36-pf）觸發 vCenter 重推，`.98` 變 outOfSync。
+- `vpxa.log` 的 `DvsApplyOperationFault` 列了 **13 個 port**（連開機中的 router VM 都在裡面）——那是**整批連坐**，不是 13 個都壞。
+- 真正的元兇看 `hostd.log`：`Skip saving dvport VDS7-1508 to /vmfs/volumes/vsan:52af…` → 只有 port 1508（死 template `VM-016`）。
+  ```bash
+  curl -sk -u root:<host 密碼> https://<host>/host/hostd.log | grep -E "Skip saving +dvport|port persistence location" | tail
+  ```
+- 匯出設定 → `UnregisterVM` → Rectify：主機端 21:21 套用成功，但 **vCenter 的 host member 狀態到 21:27 才翻 up（約 6 分鐘）**——Rectify 回 success 而狀態沒變時，先等幾分鐘再判斷，別急著做下一步。
+- 刪 portgroup 前先查「沒有 VM / template / vmk 指到它」並 `Export-VDPortGroup` 備份（還原：`New-VDPortgroup -VDSwitch <vds> -BackupPath <zip>`）。
+
 ### 4.5 驗證
 
 - VDS VLAN / MTU health check（實跑後已關回）：`.95` vmnic0/1、`.98` vmnic0 → Dell trunk 通 untagged + VLAN 2–200，MTU 9000 OK。
