@@ -44,6 +44,7 @@
 | **Cluster 擴充（Add Hosts）驗證失敗**：`Validate Network Infrastructure State for Cluster operations` → `PortGroup configuration mismatch detected for VDS`（或 `VDS found in Inventory but not in vCenter` / `LAG configuration mismatch`）；在 vCenter 直接改過 vmk / portgroup（KB 451260） | [deliverables/kb451260-vds-portgroup-mismatch](deliverables/kb451260-vds-portgroup-mismatch/README.md)（SDDC Manager 上跑的檢查/修復 script，已實機重現+修復）|
 | 要在 SDDC Manager 把 cluster 的 **principal datastore** 改成新的 datastore（KB 452458，換 LUN 的最後一步）| [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) |
 | 要把 **VCF Automation 從 fleet 正常移除**(KB 441333 `cleanup_component.py`);腳本報 401、不知道要刪幾個元件、③ 要 root | [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) + [scripts/kb441333-vcfa-removal](scripts/kb441333-vcfa-removal/) |
+| **VCF Automation 升級 precheck 報 FIPS**：`test-application-01-9x-fips` / `test-application-02-8x-fips.sh`、`One or more configured endpoints or integrations are not accessible in FIPS mode`；想跳過 vCenter / vROps / IPAM / AD 端點檢查；vRA 8 import 到 VCFMS 9 後升級被擋（KB 447667） | [deliverables/kb447667-vcfa-fips-precheck](deliverables/kb447667-vcfa-fips-precheck/README.md) |
 | 要**優雅重開 VCFMS / VSP 叢集**；開機後節點卡 `SchedulingDisabled`、drain 逾時（KB 440874 / 440862 / 448334）| [scripts/vcfms-restart](scripts/vcfms-restart/) |
 | 要套 **CVE-2026-111497（Brotli，VMSA-2026-0008）** SDDC Manager 臨時緩解：5.2.4 / 9.0.2 / 9.1.0 用 KB 460734（NODE_OPTIONS preload），9.1.1.x 用 KB 460732（nginx + app.js 回 415）| [scripts/cve-2026-111497-brotli](scripts/cve-2026-111497-brotli/)（precheck / apply / verify / rollback，依版本自動選 KB）|
 | 只想找指令 | [reference/commands.md](reference/commands.md) |
@@ -66,6 +67,7 @@
 - [deliverables/kb452458-principal-datastore](deliverables/kb452458-principal-datastore/) — KB 452458 更換 principal datastore：交付文件 docx、產生器、腳本、實測紀錄
 - [deliverables/kb451260-vds-portgroup-mismatch](deliverables/kb451260-vds-portgroup-mismatch/) — KB 451260 cluster 擴充報 PortGroup mismatch:`POST /v1/clusters/{id}/remediations {"name":"SDDC_NETWORKING_DATA_REMEDIATION"}`,含不需備用主機的唯讀預檢
 - [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) — KB 441333 移除 VCF Automation:三步(VCFA → Migration service engine → runtime)、VSP 帳號 admin、③ 要 root;21 頁 docx
+- [deliverables/kb447667-vcfa-fips-precheck](deliverables/kb447667-vcfa-fips-precheck/) — KB 447667 VCF Automation 升級 FIPS precheck：先看 log、各端點修法、dropin 白名單跳過（含 KB 沒寫的 `vsphere`）、tmpfs / `import_vcfa` 坑
 - [scripts/vcfms-restart](scripts/vcfms-restart/) — VCFMS 優雅重開機腳本 + KB 440874/440862/448334 規則
 - [scripts/cve-2026-111497-brotli](scripts/cve-2026-111497-brotli/) — CVE-2026-111497 SDDC Manager 臨時緩解腳本：KB 460734 + KB 460732，含離線 mock 測試（尚未實機驗證）
 - [reference/commands](reference/commands.md) — esxcli / PowerCLI / REST 速查
