@@ -46,7 +46,6 @@
 | 要把 **VCF Automation 從 fleet 正常移除**(KB 441333 `cleanup_component.py`);腳本報 401、不知道要刪幾個元件、③ 要 root | [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) + [scripts/kb441333-vcfa-removal](scripts/kb441333-vcfa-removal/) |
 | 要**優雅重開 VCFMS / VSP 叢集**；開機後節點卡 `SchedulingDisabled`、drain 逾時（KB 440874 / 440862 / 448334）| [scripts/vcfms-restart](scripts/vcfms-restart/) |
 | 要套 **CVE-2026-111497（Brotli，VMSA-2026-0008）** SDDC Manager 臨時緩解：5.2.4 / 9.0.2 / 9.1.0 用 KB 460734（NODE_OPTIONS preload），9.1.1.x 用 KB 460732（nginx + app.js 回 415）| [scripts/cve-2026-111497-brotli](scripts/cve-2026-111497-brotli/)（precheck / apply / verify / rollback，依版本自動選 KB）|
-| **VCD** 刪 NSX-ALB controller 報 `has associated Load Balancer Clouds`；ALB 操作報 `PKIX path building failed`；Avi controller 重裝 / 換 CA 後 SEG 報 `Cloud uuid ... does not exist!` | [scripts/vcd-alb-avi-rebuild](scripts/vcd-alb-avi-rebuild/) |
 | 只想找指令 | [reference/commands.md](reference/commands.md) |
 
 ---
@@ -69,7 +68,6 @@
 - [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) — KB 441333 移除 VCF Automation:三步(VCFA → Migration service engine → runtime)、VSP 帳號 admin、③ 要 root;21 頁 docx
 - [scripts/vcfms-restart](scripts/vcfms-restart/) — VCFMS 優雅重開機腳本 + KB 440874/440862/448334 規則
 - [scripts/cve-2026-111497-brotli](scripts/cve-2026-111497-brotli/) — CVE-2026-111497 SDDC Manager 臨時緩解腳本：KB 460734 + KB 460732，含離線 mock 測試（尚未實機驗證）
-- [scripts/vcd-alb-avi-rebuild](scripts/vcd-alb-avi-rebuild/) — Avi controller 重裝 / 換 CA 後修復 VCD NSX-ALB：信任新憑證 → 刪舊 SEG / Cloud → 匯回新的（Python，預設 dry-run，VCD 10.6.2 + Avi 22.1.5 實測）
 - [reference/commands](reference/commands.md) — esxcli / PowerCLI / REST 速查
 
 ---
