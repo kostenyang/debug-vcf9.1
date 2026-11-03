@@ -69,6 +69,7 @@
 - [deliverables/kb441333-vcfa-removal](deliverables/kb441333-vcfa-removal/) — KB 441333 移除 VCF Automation:三步(VCFA → Migration service engine → runtime)、VSP 帳號 admin、③ 要 root;21 頁 docx
 - [scripts/vcfms-restart](scripts/vcfms-restart/) — VCFMS 優雅重開機腳本 + KB 440874/440862/448334 規則
 - [scripts/cve-2026-111497-brotli](scripts/cve-2026-111497-brotli/) — CVE-2026-111497 SDDC Manager 臨時緩解腳本：KB 460734 + KB 460732，含離線 mock 測試（尚未實機驗證）
+- [scripts/vcd-alb-avi-rebuild](scripts/vcd-alb-avi-rebuild/) — Avi controller 重裝 / 換 CA 後修復 VCD NSX-ALB：信任新憑證 → 刪舊 SEG / Cloud → 匯回新的（Python，預設 dry-run，VCD 10.6.2 + Avi 22.1.5 實測）
 - [reference/commands](reference/commands.md) — esxcli / PowerCLI / REST 速查
 
 ---
