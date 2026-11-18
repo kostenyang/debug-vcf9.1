@@ -1,0 +1,37 @@
+{
+    "__version": "2.13.0",
+    "__comments": "i05 vCenter deployed onto vcf-i05-esx01 (co-located). Placeholders are filled by Deploy-I05-Vcsa.ps1 into a temp copy; no passwords in this file.",
+    "new_vcsa": {
+        "esxi": {
+            "hostname": "vcf-i05-esx01.home.lab",
+            "username": "root",
+            "password": "__ESXPASS__",
+            "deployment_network": "VM Network",
+            "datastore": "__DATASTORE__"
+        },
+        "appliance": {
+            "thin_disk_mode": true,
+            "deployment_option": "tiny",
+            "name": "vcf-i05-vc01"
+        },
+        "network": {
+            "ip_family": "ipv4",
+            "mode": "static",
+            "system_name": "vcf-i05-vc01.home.lab",
+            "ip": "10.0.1.186",
+            "prefix": "23",
+            "gateway": "10.0.0.1",
+            "dns_servers": [ "10.0.0.200" ]
+        },
+        "os": {
+            "password": "__VCPASS__",
+            "ntp_servers": "10.0.1.254",
+            "ssh_enable": true
+        },
+        "sso": {
+            "password": "__VCPASS__",
+            "domain_name": "vsphere.local"
+        }
+    },
+    "ceip": { "settings": { "ceip_enabled": false } }
+}
